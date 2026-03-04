@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Control de Listados</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="panel" id="screen-idle">
+        <img class="brand-logo" src="assets/images/512.png" alt="Logo empresa" />
+        <div class="cta-row cta-col" id="idle-actions">
+          <button class="btn btn-primary btn-main-action" id="btn-start">Empezar listado</button>
+          <button class="btn btn-warn btn-main-action" id="btn-finish">Terminar listado</button>
+        </div>
+        <form id="form-list-scan" class="scan-form hidden">
+          <img class="scan-example-image" src="assets/images/example_code.png" alt="Ejemplo código listado" />
+          <input
+            id="input-list-ean"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            placeholder="EAN listado"
+            required
+          />
+          <button class="btn btn-primary" type="submit">Validar listado</button>
+        </form>
+      </section>
+
+      <section class="panel hidden" id="screen-operator">
+        <h2>Escanear operario</h2>
+        <p>Listado válido. Ahora escanea el EAN del operario.</p>
+        <form id="form-operator-scan" class="scan-form">
+          <input
+            id="input-operator-ean"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            placeholder="EAN operario"
+            required
+          />
+          <button class="btn btn-primary" type="submit">Validar operario</button>
+        </form>
+      </section>
+
+      <section class="panel hidden" id="screen-finish-choice">
+        <h2>Finalizar listado</h2>
+        <p>Resultado obtenido. Indica si recogiste todo.</p>
+        <div id="finish-preview" class="preview-box"></div>
+        <div class="cta-row">
+          <button class="btn btn-success" id="btn-all-picked">He recogido todo</button>
+          <button class="btn btn-warn" id="btn-partial-picked">No pude recoger todo</button>
+        </div>
+      </section>
+
+      <section class="panel hidden" id="screen-partial">
+        <h2>Artículos no recogidos</h2>
+        <p>Busca por nombre y marca lo que no pudiste recoger.</p>
+        <form id="form-partial" class="partial-form">
+          <div class="partial-toolbar">
+            <input
+              id="input-partial-search"
+              type="text"
+              autocomplete="off"
+              placeholder="Buscar artículo por nombre..."
+            />
+            <div class="partial-count" id="partial-count"></div>
+          </div>
+          <div id="partial-items" class="item-list"></div>
+          <div class="cta-row">
+            <button class="btn btn-primary" type="submit">Enviar incidencias</button>
+            <button class="btn btn-ghost" id="btn-cancel-partial" type="button">Cancelar</button>
+          </div>
+          <div class="payload-box hidden" id="payload-box">
+            <h3>Body enviado</h3>
+            <pre id="payload-preview"></pre>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel panel-success hidden" id="screen-success-check">
+        <div class="check-wrap" aria-hidden="true">
+          <svg class="check-svg" viewBox="0 0 72 72">
+            <circle class="check-circle" cx="36" cy="36" r="30"></circle>
+            <path class="check-mark" d="M22 37l9 9 19-19"></path>
+          </svg>
+        </div>
+        <h2>Registro completado</h2>
+      </section>
+
+      <section class="panel panel-message hidden" id="screen-message">
+        <h2 id="message-title">Estado</h2>
+        <p id="message-text"></p>
+        <button class="btn btn-primary" id="btn-message-back">Volver a inicio</button>
+      </section>
+
+      <button class="btn btn-ghost btn-home-float" id="btn-home-float" type="button">Inicio</button>
+      <div class="error-banner hidden" id="error-banner"></div>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
