@@ -51,34 +51,62 @@
         <p>Resultado obtenido. Indica si recogiste todo.</p>
         <div id="finish-preview" class="preview-box"></div>
         <div class="cta-row">
-          <button class="btn btn-success" id="btn-all-picked">He recogido todo</button>
-          <button class="btn btn-warn" id="btn-partial-picked">No pude recoger todo</button>
+          <button class="btn btn-success" id="btn-all-picked">FINALIZAR LISTADO</button>
+          <button class="btn btn-warn" id="btn-partial-picked">TENGO PENDIENTES PICKING</button>
         </div>
       </section>
 
       <section class="panel hidden" id="screen-partial">
-        <h2>Artículos no recogidos</h2>
-        <p>Busca por nombre y marca lo que no pudiste recoger.</p>
-        <form id="form-partial" class="partial-form">
-          <div class="partial-toolbar">
-            <input
-              id="input-partial-search"
-              type="text"
-              autocomplete="off"
-              placeholder="Buscar artículo por nombre..."
-            />
+        <h2>INTRODUZCA EAN DE PENDIENTE</h2>
+        <div class="pending-layout">
+          <div class="pending-left">
+            <input id="input-pending-ean" type="text" readonly placeholder="EAN PENDIENTE" />
+            <div class="keypad" id="pending-keypad">
+              <button class="btn keypad-btn" type="button" data-key="1">1</button>
+              <button class="btn keypad-btn" type="button" data-key="2">2</button>
+              <button class="btn keypad-btn" type="button" data-key="3">3</button>
+              <button class="btn keypad-btn" type="button" data-key="4">4</button>
+              <button class="btn keypad-btn" type="button" data-key="5">5</button>
+              <button class="btn keypad-btn" type="button" data-key="6">6</button>
+              <button class="btn keypad-btn" type="button" data-key="7">7</button>
+              <button class="btn keypad-btn" type="button" data-key="8">8</button>
+              <button class="btn keypad-btn" type="button" data-key="9">9</button>
+              <button class="btn keypad-btn keypad-action" type="button" data-key="clear">LIMPIAR</button>
+              <button class="btn keypad-btn" type="button" data-key="0">0</button>
+              <button class="btn keypad-btn keypad-action" type="button" data-key="back">BORRAR</button>
+            </div>
+          </div>
+          <div class="pending-right">
             <div class="partial-count" id="partial-count"></div>
+            <div id="partial-items" class="item-list"></div>
           </div>
-          <div id="partial-items" class="item-list"></div>
-          <div class="cta-row">
-            <button class="btn btn-primary" type="submit">Enviar incidencias</button>
-            <button class="btn btn-ghost" id="btn-cancel-partial" type="button">Cancelar</button>
+        </div>
+        <div class="cta-row">
+          <button class="btn btn-primary" id="btn-send-pending" type="button">ENVIAR PENDIENTES</button>
+          <button class="btn btn-ghost" id="btn-cancel-partial" type="button">CANCELAR</button>
+        </div>
+        <div class="payload-box hidden" id="payload-box">
+          <h3>BODY ENVIADO</h3>
+          <pre id="payload-preview"></pre>
+        </div>
+      </section>
+
+      <section class="panel hidden" id="screen-pending-detail">
+        <h2 id="pending-detail-title">CONFIRMAR PENDIENTE</h2>
+        <div class="pending-detail-card" id="pending-detail-card"></div>
+        <div id="pending-single-wrap" class="hidden">
+          <p>UNIDAD PENDIENTE: 1</p>
+          <button class="btn btn-primary" id="btn-pending-single-confirm" type="button">CONFIRMAR</button>
+        </div>
+        <div id="pending-qty-wrap" class="hidden">
+          <p id="pending-qty-label">CUANTAS PUDISTE COGER</p>
+          <div class="qty-controls qty-controls-large">
+            <button type="button" class="qty-btn" id="btn-pending-qty-dec">-</button>
+            <input class="qty-input" id="input-pending-picked" type="number" min="0" step="1" value="0" readonly />
+            <button type="button" class="qty-btn" id="btn-pending-qty-inc">+</button>
           </div>
-          <div class="payload-box hidden" id="payload-box">
-            <h3>Body enviado</h3>
-            <pre id="payload-preview"></pre>
-          </div>
-        </form>
+          <button class="btn btn-primary" id="btn-pending-qty-confirm" type="button">CONFIRMAR</button>
+        </div>
       </section>
 
       <section class="panel panel-success hidden" id="screen-success-check">

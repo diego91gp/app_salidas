@@ -13,7 +13,8 @@ const TEST_CODES = {
 const state = {
   currentListEan: null,
   finishItems: [],
-  partialItems: []
+  partialItems: [],
+  pendingSelectedIndex: null
 };
 
 const screens = {
@@ -21,6 +22,7 @@ const screens = {
   operator: document.getElementById('screen-operator'),
   finishChoice: document.getElementById('screen-finish-choice'),
   partial: document.getElementById('screen-partial'),
+  pendingDetail: document.getElementById('screen-pending-detail'),
   successCheck: document.getElementById('screen-success-check'),
   message: document.getElementById('screen-message')
 };
@@ -30,11 +32,17 @@ const errorBanner = document.getElementById('error-banner');
 const inputListEan = document.getElementById('input-list-ean');
 const inputOperatorEan = document.getElementById('input-operator-ean');
 const finishPreview = document.getElementById('finish-preview');
-const inputPartialSearch = document.getElementById('input-partial-search');
+const inputPendingEan = document.getElementById('input-pending-ean');
 const partialCount = document.getElementById('partial-count');
 const partialItemsContainer = document.getElementById('partial-items');
 const payloadBox = document.getElementById('payload-box');
 const payloadPreview = document.getElementById('payload-preview');
+const pendingKeypad = document.getElementById('pending-keypad');
+const pendingDetailTitle = document.getElementById('pending-detail-title');
+const pendingDetailCard = document.getElementById('pending-detail-card');
+const pendingSingleWrap = document.getElementById('pending-single-wrap');
+const pendingQtyWrap = document.getElementById('pending-qty-wrap');
+const inputPendingPicked = document.getElementById('input-pending-picked');
 
 const messageTitle = document.getElementById('message-title');
 const messageText = document.getElementById('message-text');
@@ -44,12 +52,16 @@ const btnFinish = document.getElementById('btn-finish');
 const btnAllPicked = document.getElementById('btn-all-picked');
 const btnPartialPicked = document.getElementById('btn-partial-picked');
 const btnCancelPartial = document.getElementById('btn-cancel-partial');
+const btnSendPending = document.getElementById('btn-send-pending');
 const btnMessageBack = document.getElementById('btn-message-back');
 const btnHomeFloat = document.getElementById('btn-home-float');
+const btnPendingSingleConfirm = document.getElementById('btn-pending-single-confirm');
+const btnPendingQtyDec = document.getElementById('btn-pending-qty-dec');
+const btnPendingQtyInc = document.getElementById('btn-pending-qty-inc');
+const btnPendingQtyConfirm = document.getElementById('btn-pending-qty-confirm');
 
 const formListScan = document.getElementById('form-list-scan');
 const formOperatorScan = document.getElementById('form-operator-scan');
-const formPartial = document.getElementById('form-partial');
 const idleActions = document.getElementById('idle-actions');
 
 function setActiveScreen(key) {
@@ -67,10 +79,11 @@ function showError(message) {
 function toIdle() {
   inputListEan.value = '';
   inputOperatorEan.value = '';
-  inputPartialSearch.value = '';
+  inputPendingEan.value = '';
   state.currentListEan = null;
   state.finishItems = [];
   state.partialItems = [];
+  state.pendingSelectedIndex = null;
   payloadBox.classList.add('hidden');
   payloadPreview.textContent = '';
   idleActions.classList.remove('hidden');
@@ -223,47 +236,72 @@ function escapeHtml(value) {
     .replaceAll("'", '&#039;');
 }
 
-function renderPartialItems() {
-  const query = inputPartialSearch.value.trim().toLowerCase();
+function renderPendingResults() {
+  const query = inputPendingEan.value.trim();
   const filtered = state.partialItems
     .map((item, index) => ({ ...item, index }))
-    .filter((item) => !query || String(item.articulo || '').toLowerCase().includes(query));
+    .filter((item) => !query || String(item.ean || '').includes(query));
 
-  partialCount.textContent = `${filtered.length} / ${state.partialItems.length}`;
+  const completed = state.partialItems.filter((item) => item.processed).length;
+  partialCount.textContent = `${completed} PROCESADOS / ${state.partialItems.length}`;
 
   if (!filtered.length) {
-    partialItemsContainer.innerHTML = '<div class="item-row-empty">No hay resultados para la búsqueda.</div>';
+    partialItemsContainer.innerHTML = '<div class="item-row-empty">SIN RESULTADOS PARA ESE EAN.</div>';
     return;
   }
 
   partialItemsContainer.innerHTML = filtered
-    .map(
-      (item) => `
-      <div class="item-row" data-index="${item.index}">
-        <label>
-          <input type="checkbox" data-role="check" ${item.selected ? 'checked' : ''} />
-          No recogido
-        </label>
-        <div class="item-main">
-          <strong>${escapeHtml(item.articulo || 'Sin descripción')}</strong>
+    .slice(0, 30)
+    .map((item) => {
+      const notPicked = item.maxQty - item.pickedQty;
+      return `
+        <button class="pending-result ${item.processed ? 'pending-result-done' : ''}" data-index="${item.index}">
           <img class="item-thumb" src="${escapeHtml(item.url || 'mock-images/item-01.svg')}" alt="" />
-          <span>EAN ${escapeHtml(item.ean || '-')} | Pedidas: ${item.maxQty}</span>
-        </div>
-        <div class="qty-controls">
-          <button type="button" class="qty-btn" data-role="dec">-</button>
-          <input
-            class="qty-input"
-            type="number"
-            min="1"
-            step="1"
-            data-role="qty"
-            value="${item.qty}"
-          />
-          <button type="button" class="qty-btn" data-role="inc">+</button>
-        </div>
-      </div>`
-    )
+          <div class="item-main">
+            <strong>${escapeHtml(item.articulo || 'SIN DESCRIPCION')}</strong>
+            <span>EAN ${escapeHtml(item.ean || '-')} | UDS ${item.maxQty} | PENDIENTES ${notPicked}</span>
+          </div>
+        </button>`;
+    })
     .join('');
+}
+
+function showPendingDetail(index) {
+  const item = state.partialItems[index];
+  if (!item) return;
+
+  state.pendingSelectedIndex = index;
+  pendingDetailTitle.textContent = `PENDIENTE EAN ${item.ean}`;
+  pendingDetailCard.innerHTML = `
+    <img class="item-thumb" src="${escapeHtml(item.url || 'mock-images/item-01.svg')}" alt="" />
+    <div class="item-main">
+      <strong>${escapeHtml(item.articulo || 'SIN DESCRIPCION')}</strong>
+      <span>UNIDADES DEL PEDIDO: ${item.maxQty}</span>
+    </div>`;
+
+  if (item.maxQty === 1) {
+    pendingSingleWrap.classList.remove('hidden');
+    pendingQtyWrap.classList.add('hidden');
+  } else {
+    inputPendingPicked.value = String(item.pickedQty);
+    pendingSingleWrap.classList.add('hidden');
+    pendingQtyWrap.classList.remove('hidden');
+  }
+
+  setActiveScreen('pendingDetail');
+}
+
+function savePendingWithPickedQty(pickedQty) {
+  const index = state.pendingSelectedIndex;
+  const item = state.partialItems[index];
+  if (!item) return;
+
+  item.pickedQty = Math.max(0, Math.min(item.maxQty, Number(pickedQty) || 0));
+  item.processed = true;
+  state.pendingSelectedIndex = null;
+  inputPendingEan.value = '';
+  renderPendingResults();
+  setActiveScreen('partial');
 }
 
 btnStart.addEventListener('click', () => {
@@ -345,13 +383,13 @@ btnPartialPicked.addEventListener('click', () => {
     articulo: item.articulo,
     url: item.url,
     maxQty: Number(item.uds) > 0 ? Number(item.uds) : 1,
-    qty: Number(item.uds) > 0 ? Number(item.uds) : 1,
-    selected: false
+    pickedQty: 0,
+    processed: false
   }));
-  inputPartialSearch.value = '';
+  inputPendingEan.value = '';
   payloadBox.classList.add('hidden');
   payloadPreview.textContent = '';
-  renderPartialItems();
+  renderPendingResults();
   setActiveScreen('partial');
 });
 
@@ -361,64 +399,61 @@ btnCancelPartial.addEventListener('click', () => {
   setActiveScreen('finishChoice');
 });
 
-inputPartialSearch.addEventListener('input', () => {
-  renderPartialItems();
+pendingKeypad.addEventListener('click', (event) => {
+  const key = event.target.dataset.key;
+  if (!key) return;
+
+  if (key === 'clear') {
+    inputPendingEan.value = '';
+  } else if (key === 'back') {
+    inputPendingEan.value = inputPendingEan.value.slice(0, -1);
+  } else {
+    inputPendingEan.value += key;
+  }
+
+  renderPendingResults();
 });
 
 partialItemsContainer.addEventListener('click', (event) => {
-  const target = event.target;
-  const row = target.closest('.item-row');
-  if (!row) return;
-
-  const index = Number(row.dataset.index);
-  const item = state.partialItems[index];
-  if (!item) return;
-
-  const role = target.dataset.role;
-  if (role === 'dec') {
-    item.qty = Math.max(1, item.qty - 1);
-    const input = row.querySelector('[data-role="qty"]');
-    if (input) input.value = String(item.qty);
-  }
-  if (role === 'inc') {
-    item.qty = Math.min(item.maxQty, item.qty + 1);
-    const input = row.querySelector('[data-role="qty"]');
-    if (input) input.value = String(item.qty);
-  }
+  const result = event.target.closest('.pending-result');
+  if (!result) return;
+  showPendingDetail(Number(result.dataset.index));
 });
 
-partialItemsContainer.addEventListener('change', (event) => {
-  const target = event.target;
-  const row = target.closest('.item-row');
-  if (!row) return;
-
-  const index = Number(row.dataset.index);
-  const item = state.partialItems[index];
-  if (!item) return;
-
-  const role = target.dataset.role;
-  if (role === 'check') {
-    item.selected = target.checked;
-  }
-  if (role === 'qty') {
-    const raw = Number(target.value || 1);
-    item.qty = Math.max(1, Math.min(item.maxQty, Number.isFinite(raw) ? raw : 1));
-    target.value = String(item.qty);
-  }
+btnPendingSingleConfirm.addEventListener('click', () => {
+  savePendingWithPickedQty(0);
 });
 
-formPartial.addEventListener('submit', async (event) => {
-  event.preventDefault();
+btnPendingQtyDec.addEventListener('click', () => {
+  const current = Number(inputPendingPicked.value || 0);
+  inputPendingPicked.value = String(Math.max(0, current - 1));
+});
+
+btnPendingQtyInc.addEventListener('click', () => {
+  const index = state.pendingSelectedIndex;
+  const item = state.partialItems[index];
+  if (!item) return;
+  const current = Number(inputPendingPicked.value || 0);
+  inputPendingPicked.value = String(Math.min(item.maxQty, current + 1));
+});
+
+btnPendingQtyConfirm.addEventListener('click', () => {
+  savePendingWithPickedQty(Number(inputPendingPicked.value || 0));
+});
+
+btnSendPending.addEventListener('click', async () => {
   const notPicked = state.partialItems
-    .filter((item) => item.selected)
+    .filter((item) => item.processed)
     .map((item) => ({
       ean: item.ean,
       articulo: item.articulo,
-      uds: item.qty
-    }));
+      uds: item.maxQty - item.pickedQty,
+      recogidas: item.pickedQty
+    }))
+    .filter((item) => item.uds > 0);
 
   if (!notPicked.length) {
-    showError('Selecciona al menos un artículo no recogido.');
+    showError('NO HAY PENDIENTES PROCESADOS PARA ENVIAR.');
     return;
   }
 
