@@ -60,7 +60,13 @@
         <h2>INTRODUZCA EAN DE PENDIENTE</h2>
         <div class="pending-layout">
           <div class="pending-left">
-            <input id="input-pending-ean" type="text" readonly placeholder="EAN PENDIENTE" />
+            <input
+              id="input-pending-ean"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              placeholder="EAN PENDIENTE"
+            />
             <div class="keypad" id="pending-keypad">
               <button class="btn keypad-btn" type="button" data-key="1">1</button>
               <button class="btn keypad-btn" type="button" data-key="2">2</button>

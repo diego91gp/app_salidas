@@ -391,6 +391,7 @@ btnPartialPicked.addEventListener('click', () => {
   payloadPreview.textContent = '';
   renderPendingResults();
   setActiveScreen('partial');
+  setTimeout(() => inputPendingEan.focus(), 10);
 });
 
 btnCancelPartial.addEventListener('click', () => {
@@ -411,6 +412,11 @@ pendingKeypad.addEventListener('click', (event) => {
     inputPendingEan.value += key;
   }
 
+  renderPendingResults();
+});
+
+inputPendingEan.addEventListener('input', () => {
+  inputPendingEan.value = inputPendingEan.value.replace(/\D/g, '');
   renderPendingResults();
 });
 
