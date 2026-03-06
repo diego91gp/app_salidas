@@ -1,9 +1,11 @@
-const API_BASE = '';
-const MOCK_MODE = true;
+const ENV = window.ENV_CONFIG || {};
+const API_BASE = String(ENV.BASE_URL || '').replace(/\/+$/, '');
+const AUTHORIZATION_TOKEN = String(ENV.AUTHORIZATION_TOKEN || '').trim();
+const MOCK_MODE = false;
 const ENDPOINTS = {
-  getSalList: '/API/GET_SAL_LIST',
-  getOperator: '/API/GET_OPE',
-  finishList: '/API/FIN_LIST'
+  getOperator: '/api/API_GET_OPE',
+  assignList: '/api/API_ASSIGN_SAL_LIST',
+  finishList: '/api/FIN_LIST'
 };
 const TEST_CODES = {
   listEan: 'TESTEAN',
@@ -11,7 +13,10 @@ const TEST_CODES = {
 };
 
 const state = {
+  currentOperatorEan: null,
+  currentOperatorName: '',
   currentListEan: null,
+  currentCompany: '',
   finishItems: [],
   partialItems: [],
   pendingSelectedIndex: null
@@ -24,10 +29,13 @@ const screens = {
   partial: document.getElementById('screen-partial'),
   pendingDetail: document.getElementById('screen-pending-detail'),
   successCheck: document.getElementById('screen-success-check'),
+  loading: document.getElementById('screen-loading'),
+  errorX: document.getElementById('screen-error-x'),
   message: document.getElementById('screen-message')
 };
 
 const errorBanner = document.getElementById('error-banner');
+const centerModal = document.getElementById('center-modal');
 
 const inputListEan = document.getElementById('input-list-ean');
 const inputOperatorEan = document.getElementById('input-operator-ean');
@@ -38,6 +46,7 @@ const partialItemsContainer = document.getElementById('partial-items');
 const payloadBox = document.getElementById('payload-box');
 const payloadPreview = document.getElementById('payload-preview');
 const pendingKeypad = document.getElementById('pending-keypad');
+const keypadList = document.getElementById('keypad-list');
 const pendingDetailTitle = document.getElementById('pending-detail-title');
 const pendingDetailCard = document.getElementById('pending-detail-card');
 const pendingSingleWrap = document.getElementById('pending-single-wrap');
@@ -46,6 +55,12 @@ const inputPendingPicked = document.getElementById('input-pending-picked');
 
 const messageTitle = document.getElementById('message-title');
 const messageText = document.getElementById('message-text');
+const successTitle = document.getElementById('success-title');
+const loadingTitle = document.getElementById('loading-title');
+const errorText = document.getElementById('error-text');
+const listUserIdentified = document.getElementById('list-user-identified');
+const idleBrandLogo = document.getElementById('idle-brand-logo');
+const idleMainTitle = document.getElementById('idle-main-title');
 
 const btnStart = document.getElementById('btn-start');
 const btnFinish = document.getElementById('btn-finish');
@@ -64,6 +79,28 @@ const formListScan = document.getElementById('form-list-scan');
 const formOperatorScan = document.getElementById('form-operator-scan');
 const idleActions = document.getElementById('idle-actions');
 
+function submitForm(formEl) {
+  if (typeof formEl.requestSubmit === 'function') {
+    formEl.requestSubmit();
+    return;
+  }
+  formEl.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+}
+
+function applyKeyToInput(inputEl, key) {
+  if (key === 'clear') {
+    inputEl.value = '';
+    return;
+  }
+  if (key === 'back') {
+    inputEl.value = inputEl.value.slice(0, -1);
+    return;
+  }
+  if (/^\d$/.test(key)) {
+    inputEl.value += key;
+  }
+}
+
 function setActiveScreen(key) {
   Object.values(screens).forEach((screen) => screen.classList.add('hidden'));
   screens[key].classList.remove('hidden');
@@ -76,11 +113,57 @@ function showError(message) {
   showError._timer = window.setTimeout(() => errorBanner.classList.add('hidden'), 5000);
 }
 
+function showCenterModal(message, durationMs = 2000) {
+  centerModal.textContent = message;
+  centerModal.classList.remove('hidden');
+  window.clearTimeout(showCenterModal._timer);
+  showCenterModal._timer = window.setTimeout(() => centerModal.classList.add('hidden'), durationMs);
+}
+
+function showListScanScreen() {
+  setActiveScreen('idle');
+  idleActions.classList.add('hidden');
+  formListScan.classList.remove('hidden');
+  inputListEan.value = '';
+  if (idleBrandLogo) idleBrandLogo.classList.add('hidden');
+  if (idleMainTitle) idleMainTitle.classList.add('hidden');
+  const operatorLabel = state.currentOperatorName || '-';
+  if (listUserIdentified) {
+    listUserIdentified.textContent = `IDENTIFICADO COMO "${operatorLabel}"`;
+  }
+  setTimeout(() => inputListEan.focus(), 10);
+}
+
+function showListErrorScreen(message, durationMs = 2000, onDone = showListScanScreen) {
+  errorText.textContent = message || 'ERROR';
+  setActiveScreen('errorX');
+  window.clearTimeout(showListErrorScreen._timer);
+  showListErrorScreen._timer = window.setTimeout(() => {
+    onDone();
+  }, durationMs);
+}
+
+function showOperatorScanScreen() {
+  setActiveScreen('operator');
+  inputOperatorEan.value = '';
+  setTimeout(() => inputOperatorEan.focus(), 10);
+}
+
+function formatServerResponse(data) {
+  if (!data || typeof data !== 'object') return String(data || '');
+  if (data.message) return String(data.message);
+  if (data.company) return `COMPANIA: ${data.company}`;
+  return JSON.stringify(data);
+}
+
 function toIdle() {
   inputListEan.value = '';
   inputOperatorEan.value = '';
   inputPendingEan.value = '';
+  state.currentOperatorEan = null;
+  state.currentOperatorName = '';
   state.currentListEan = null;
+  state.currentCompany = '';
   state.finishItems = [];
   state.partialItems = [];
   state.pendingSelectedIndex = null;
@@ -88,6 +171,9 @@ function toIdle() {
   payloadPreview.textContent = '';
   idleActions.classList.remove('hidden');
   formListScan.classList.add('hidden');
+  if (idleBrandLogo) idleBrandLogo.classList.remove('hidden');
+  if (idleMainTitle) idleMainTitle.classList.remove('hidden');
+  if (listUserIdentified) listUserIdentified.textContent = 'IDENTIFICADO COMO "-"';
   setActiveScreen('idle');
 }
 
@@ -100,21 +186,49 @@ function asArrayItems(payload) {
 
 async function apiRequest(endpoint, body) {
   if (MOCK_MODE) {
+    console.log('[API REQUEST][MOCK]', { endpoint, body });
     return mockApiRequest(endpoint, body);
   }
 
+  const isGetEndpoint = endpoint === ENDPOINTS.getOperator;
   const options = {
-    method: 'POST',
+    method: isGetEndpoint ? 'GET' : 'POST',
     headers: {
+      Accept: 'application/json',
       'Content-Type': 'application/json'
     }
   };
 
-  if (body !== undefined) {
-    options.body = JSON.stringify(body);
+  if (AUTHORIZATION_TOKEN) {
+    options.headers.Authorization = `Basic ${AUTHORIZATION_TOKEN}`;
   }
 
-  const response = await fetch(`${API_BASE}${endpoint}`, options);
+  let url = `${API_BASE}${endpoint}`;
+
+  if (isGetEndpoint) {
+    const params = new URLSearchParams();
+    Object.entries(body || {}).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && String(value).trim() !== '') {
+        params.set(key, String(value));
+      }
+    });
+    const qs = params.toString();
+    if (qs) {
+      url += `?${qs}`;
+    }
+  } else {
+    if (body !== undefined) {
+      options.body = JSON.stringify(body);
+    }
+  }
+
+  console.log('[API REQUEST]', {
+    method: options.method,
+    url,
+    headers: options.headers,
+    body: body ?? null
+  });
+  const response = await fetch(url, options);
   let data = null;
 
   try {
@@ -123,16 +237,49 @@ async function apiRequest(endpoint, body) {
     data = null;
   }
 
+  console.log('[API RESPONSE]', {
+    method: options.method,
+    url,
+    status: response.status,
+    ok: response.ok,
+    data
+  });
+
   if (!response.ok) {
     const msg = data?.message || `HTTP ${response.status}`;
+    console.error('[API ERROR][HTTP]', {
+      method: options.method,
+      url,
+      status: response.status,
+      response: data
+    });
     throw new Error(msg);
   }
 
   if (data?.status && String(data.status).toLowerCase() === 'error') {
+    console.error('[API ERROR][STATUS_ERROR]', {
+      method: options.method,
+      url,
+      response: data
+    });
     throw new Error(data.message || 'Error en la respuesta de API');
   }
 
+  if (data?.error) {
+    console.error('[API ERROR][ERROR_FIELD]', {
+      method: options.method,
+      url,
+      response: data
+    });
+    throw new Error(data.error);
+  }
+
   if (data?.ok === false) {
+    console.error('[API ERROR][OK_FALSE]', {
+      method: options.method,
+      url,
+      response: data
+    });
     throw new Error(data.message || 'Operación no válida');
   }
 
@@ -165,20 +312,21 @@ function generateMockFinishItems(count = 120) {
 
 async function mockApiRequest(endpoint, body) {
   await delay(250);
-  const normalizedEan = String(body?.ean || '').trim().toUpperCase();
-
-  if (endpoint === ENDPOINTS.getSalList) {
-    if (normalizedEan === TEST_CODES.listEan) {
-      return { ok: true, message: 'Listado validado (mock)' };
-    }
-    throw new Error('Listado no encontrado. Usa TESTEAN.');
-  }
+  const normalizedListEan = String(body?.list_ean || body?.ean || '').trim().toUpperCase();
+  const normalizedOperatorEan = String(body?.operator_ean || body?.ean || '').trim().toUpperCase();
 
   if (endpoint === ENDPOINTS.getOperator) {
-    if (normalizedEan === TEST_CODES.operatorEan) {
-      return { ok: true, message: 'Operario validado (mock)' };
+    if (normalizedOperatorEan === TEST_CODES.operatorEan) {
+      return { ok: true, name: 'OPERARIO TEST' };
     }
     throw new Error('Operario no encontrado. Usa TESTOPE.');
+  }
+
+  if (endpoint === ENDPOINTS.assignList) {
+    if (normalizedListEan === TEST_CODES.listEan) {
+      return { ok: true, company: 'SIROKO' };
+    }
+    throw new Error('Listado no encontrado. Usa TESTEAN.');
   }
 
   if (endpoint === ENDPOINTS.finishList) {
@@ -191,6 +339,7 @@ async function mockApiRequest(endpoint, body) {
     }
 
     if (body?.ok === true) {
+      await delay(2750);
       return { ok: true, message: 'Cierre total registrado (mock)' };
     }
 
@@ -266,6 +415,14 @@ function renderPendingResults() {
     .join('');
 }
 
+function getFilteredPendingIndexes() {
+  const query = inputPendingEan.value.trim();
+  return state.partialItems
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => !query || String(item.ean || '').includes(query))
+    .map(({ index }) => index);
+}
+
 function showPendingDetail(index) {
   const item = state.partialItems[index];
   if (!item) return;
@@ -305,10 +462,7 @@ function savePendingWithPickedQty(pickedQty) {
 }
 
 btnStart.addEventListener('click', () => {
-  setActiveScreen('idle');
-  idleActions.classList.add('hidden');
-  formListScan.classList.remove('hidden');
-  setTimeout(() => inputListEan.focus(), 10);
+  showOperatorScanScreen();
 });
 
 btnFinish.addEventListener('click', async () => {
@@ -326,17 +480,25 @@ formListScan.addEventListener('submit', async (event) => {
   event.preventDefault();
   const ean = inputListEan.value.trim();
 
-  if (!ean) return;
+  if (!ean) {
+    showCenterModal('INTRODUCE EAN DE LISTADO', 1800);
+    return;
+  }
 
   try {
-    await apiRequest(ENDPOINTS.getSalList, { ean });
+    loadingTitle.textContent = 'VALIDANDO LISTADO...';
+    setActiveScreen('loading');
+    const listResponse = await apiRequest(ENDPOINTS.assignList, {
+      operator_ean: state.currentOperatorEan,
+      list_ean: ean
+    });
     state.currentListEan = ean;
-    setActiveScreen('operator');
-    inputOperatorEan.value = '';
-    setTimeout(() => inputOperatorEan.focus(), 10);
+    state.currentCompany = String(listResponse?.company || '');
+    successTitle.textContent = `OPERARIO ASIGNADO A LISTADO ${ean}${state.currentCompany ? ` ${state.currentCompany}` : ''} CORRECTAMENTE`;
+    setActiveScreen('successCheck');
+    setTimeout(() => toIdle(), 3000);
   } catch (error) {
-    showError(error.message || 'Listado no válido');
-    inputListEan.select();
+    showListErrorScreen(error.message || 'ERROR LISTADO', 2000, showListScanScreen);
   }
 });
 
@@ -347,33 +509,36 @@ formOperatorScan.addEventListener('submit', async (event) => {
   if (!ean) return;
 
   try {
-    await apiRequest(ENDPOINTS.getOperator, {
-      ean,
-      listEan: state.currentListEan
-    });
-
-    setActiveScreen('successCheck');
-    setTimeout(() => toIdle(), 1000);
+    loadingTitle.textContent = 'VALIDANDO OPERARIO...';
+    setActiveScreen('loading');
+    const opeResponse = await apiRequest(ENDPOINTS.getOperator, { operator_ean: ean });
+    const opeName = String(opeResponse?.name || '').trim();
+    if (!opeName) {
+      throw new Error('OPERARIO NO ENCONTRADO');
+    }
+    state.currentOperatorEan = ean;
+    state.currentOperatorName = opeName;
+    showListScanScreen();
   } catch (error) {
-    showError(error.message || 'Operario no encontrado');
-    inputOperatorEan.select();
-    inputOperatorEan.focus();
+    showListErrorScreen(error.message || 'OPERARIO NO ENCONTRADO', 2000, showOperatorScanScreen);
   }
 });
 
 btnAllPicked.addEventListener('click', async () => {
   try {
+    loadingTitle.textContent = 'FINALIZANDO LISTADO...';
+    setActiveScreen('loading');
     await apiRequest(ENDPOINTS.finishList, {
       ok: true,
       items: []
     });
 
-    messageTitle.textContent = 'Listado cerrado';
-    messageText.textContent = 'Se confirmó que todo fue recogido.';
-    setActiveScreen('message');
-    setTimeout(() => toIdle(), 1400);
+    successTitle.textContent = 'LISTADO FINALIZADO';
+    setActiveScreen('successCheck');
+    setTimeout(() => toIdle(), 1200);
   } catch (error) {
     showError(error.message || 'No se pudo enviar la confirmación');
+    setActiveScreen('finishChoice');
   }
 });
 
@@ -400,24 +565,103 @@ btnCancelPartial.addEventListener('click', () => {
   setActiveScreen('finishChoice');
 });
 
+keypadList.addEventListener('click', (event) => {
+  const key = event.target.dataset.key;
+  if (!key) return;
+  applyKeyToInput(inputListEan, key);
+});
+
 pendingKeypad.addEventListener('click', (event) => {
   const key = event.target.dataset.key;
   if (!key) return;
 
-  if (key === 'clear') {
-    inputPendingEan.value = '';
-  } else if (key === 'back') {
-    inputPendingEan.value = inputPendingEan.value.slice(0, -1);
-  } else {
-    inputPendingEan.value += key;
-  }
-
+  applyKeyToInput(inputPendingEan, key);
   renderPendingResults();
 });
 
 inputPendingEan.addEventListener('input', () => {
   inputPendingEan.value = inputPendingEan.value.replace(/\D/g, '');
   renderPendingResults();
+});
+
+window.addEventListener('keydown', (event) => {
+  if (!screens.operator.classList.contains('hidden')) {
+    if (/^\d$/.test(event.key)) {
+      event.preventDefault();
+      inputOperatorEan.value += event.key;
+      return;
+    }
+    if (event.key === 'Backspace') {
+      event.preventDefault();
+      inputOperatorEan.value = inputOperatorEan.value.slice(0, -1);
+      return;
+    }
+    if (event.key === 'Delete') {
+      event.preventDefault();
+      inputOperatorEan.value = '';
+      return;
+    }
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      submitForm(formOperatorScan);
+      return;
+    }
+  }
+
+  if (!screens.idle.classList.contains('hidden') && !formListScan.classList.contains('hidden')) {
+    if (/^\d$/.test(event.key)) {
+      event.preventDefault();
+      inputListEan.value += event.key;
+      return;
+    }
+    if (event.key === 'Backspace') {
+      event.preventDefault();
+      inputListEan.value = inputListEan.value.slice(0, -1);
+      return;
+    }
+    if (event.key === 'Delete') {
+      event.preventDefault();
+      inputListEan.value = '';
+      return;
+    }
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      submitForm(formListScan);
+      return;
+    }
+  }
+
+  if (screens.partial.classList.contains('hidden')) return;
+  if (!screens.pendingDetail.classList.contains('hidden')) return;
+
+  if (/^\d$/.test(event.key)) {
+    event.preventDefault();
+    inputPendingEan.value += event.key;
+    renderPendingResults();
+    return;
+  }
+
+  if (event.key === 'Backspace') {
+    event.preventDefault();
+    inputPendingEan.value = inputPendingEan.value.slice(0, -1);
+    renderPendingResults();
+    return;
+  }
+
+  if (event.key === 'Delete') {
+    event.preventDefault();
+    inputPendingEan.value = '';
+    renderPendingResults();
+    return;
+  }
+
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    const indexes = getFilteredPendingIndexes();
+    if (indexes.length > 0) {
+      showPendingDetail(indexes[0]);
+    }
+  }
 });
 
 partialItemsContainer.addEventListener('click', (event) => {

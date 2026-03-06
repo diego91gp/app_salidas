@@ -11,38 +11,65 @@
   <body>
     <main class="app-shell">
       <section class="panel" id="screen-idle">
-        <img class="brand-logo" src="assets/images/512.png" alt="Logo empresa" />
+        <img class="brand-logo" id="idle-brand-logo" src="assets/images/512.png" alt="Logo empresa" />
+        <h1 class="idle-title" id="idle-main-title">GESTION LISTADOS PICKING</h1>
         <div class="cta-row cta-col" id="idle-actions">
           <button class="btn btn-primary btn-main-action" id="btn-start">Empezar listado</button>
           <button class="btn btn-warn btn-main-action" id="btn-finish">Terminar listado</button>
         </div>
         <form id="form-list-scan" class="scan-form hidden">
-          <img class="scan-example-image" src="assets/images/example_code.png" alt="Ejemplo código listado" />
+          <div class="list-scan-head">
+            <div class="list-user-icon">👤</div>
+            <p id="list-user-identified">IDENTIFICADO COMO "-"</p>
+            <h2>ESCANEAR EAN LISTADO</h2>
+          </div>
+          <div class="scan-example-frame">
+            <img
+              class="scan-example-image"
+              src="assets/images/example_code.png"
+              alt="Ejemplo código listado"
+            />
+          </div>
           <input
             id="input-list-ean"
             type="text"
-            inputmode="numeric"
+            inputmode="none"
             autocomplete="off"
             placeholder="EAN listado"
+            readonly
             required
           />
+          <div class="keypad keypad-compact" id="keypad-list">
+            <button class="btn keypad-btn" type="button" data-key="1">1</button>
+            <button class="btn keypad-btn" type="button" data-key="2">2</button>
+            <button class="btn keypad-btn" type="button" data-key="3">3</button>
+            <button class="btn keypad-btn" type="button" data-key="4">4</button>
+            <button class="btn keypad-btn" type="button" data-key="5">5</button>
+            <button class="btn keypad-btn" type="button" data-key="6">6</button>
+            <button class="btn keypad-btn" type="button" data-key="7">7</button>
+            <button class="btn keypad-btn" type="button" data-key="8">8</button>
+            <button class="btn keypad-btn" type="button" data-key="9">9</button>
+            <button class="btn keypad-btn keypad-action" type="button" data-key="clear">LIMPIAR</button>
+            <button class="btn keypad-btn" type="button" data-key="0">0</button>
+            <button class="btn keypad-btn keypad-action" type="button" data-key="back">BORRAR</button>
+          </div>
           <button class="btn btn-primary" type="submit">Validar listado</button>
         </form>
       </section>
 
       <section class="panel hidden" id="screen-operator">
-        <h2>Escanear operario</h2>
-        <p>Listado válido. Ahora escanea el EAN del operario.</p>
+        <img class="ope-image" src="assets/images/ope.png" alt="Operario" />
+        <h2>ESCANEAR ID OPERARIO</h2>
         <form id="form-operator-scan" class="scan-form">
           <input
             id="input-operator-ean"
             type="text"
-            inputmode="numeric"
+            inputmode="none"
             autocomplete="off"
             placeholder="EAN operario"
+            readonly
             required
           />
-          <button class="btn btn-primary" type="submit">Validar operario</button>
         </form>
       </section>
 
@@ -63,9 +90,10 @@
             <input
               id="input-pending-ean"
               type="text"
-              inputmode="numeric"
+              inputmode="none"
               autocomplete="off"
               placeholder="EAN PENDIENTE"
+              readonly
             />
             <div class="keypad" id="pending-keypad">
               <button class="btn keypad-btn" type="button" data-key="1">1</button>
@@ -122,7 +150,24 @@
             <path class="check-mark" d="M22 37l9 9 19-19"></path>
           </svg>
         </div>
-        <h2>Registro completado</h2>
+        <h2 id="success-title">REGISTRO COMPLETADO</h2>
+      </section>
+
+      <section class="panel panel-loading hidden" id="screen-loading">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <h2 id="loading-title">CARGANDO...</h2>
+      </section>
+
+      <section class="panel panel-error hidden" id="screen-error-x">
+        <div class="x-wrap" aria-hidden="true">
+          <svg class="x-svg" viewBox="0 0 72 72">
+            <circle class="x-circle" cx="36" cy="36" r="30"></circle>
+            <path class="x-mark" d="M24 24l24 24"></path>
+            <path class="x-mark x-mark-second" d="M48 24L24 48"></path>
+          </svg>
+        </div>
+        <h2 id="error-title">ERROR</h2>
+        <p id="error-text"></p>
       </section>
 
       <section class="panel panel-message hidden" id="screen-message">
@@ -133,8 +178,10 @@
 
       <button class="btn btn-ghost btn-home-float" id="btn-home-float" type="button">Inicio</button>
       <div class="error-banner hidden" id="error-banner"></div>
+      <div class="center-modal hidden" id="center-modal"></div>
     </main>
 
+    <script src="../env-config.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
