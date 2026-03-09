@@ -19,7 +19,7 @@
         </div>
         <form id="form-list-scan" class="scan-form hidden">
           <div class="list-scan-head">
-            <div class="list-user-icon">👤</div>
+            <div class="list-user-icon" id="list-user-icon">👤</div>
             <p id="list-user-identified">IDENTIFICADO COMO "-"</p>
             <h2>ESCANEAR EAN LISTADO</h2>
           </div>
@@ -87,6 +87,10 @@
         <h2>INTRODUZCA EAN DE PENDIENTE</h2>
         <div class="pending-layout">
           <div class="pending-left">
+            <div class="partial-count" id="partial-count"></div>
+            <div id="partial-items" class="item-list"></div>
+          </div>
+          <div class="pending-middle">
             <input
               id="input-pending-ean"
               type="text"
@@ -110,9 +114,9 @@
               <button class="btn keypad-btn keypad-action" type="button" data-key="back">BORRAR</button>
             </div>
           </div>
-          <div class="pending-right">
-            <div class="partial-count" id="partial-count"></div>
-            <div id="partial-items" class="item-list"></div>
+          <div class="pending-confirmed">
+            <div class="partial-count partial-count-confirmed" id="confirmed-count"></div>
+            <div id="confirmed-items" class="item-list item-list-confirmed"></div>
           </div>
         </div>
         <div class="cta-row">
