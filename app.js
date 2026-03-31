@@ -5,7 +5,8 @@ const MOCK_MODE = false;
 const ENDPOINTS = {
   getOperator: '/api/API_GET_OPE',
   assignList: '/api/API_ASSIGN_SAL_LIST',
-  finishList: '/api/API_GET_LIST'
+  getList: '/api/API_GET_LIST',
+  finishList: '/api/API_FIN_LIST'
 };
 const TEST_CODES = {
   listEan: 'TESTEAN',
@@ -62,6 +63,7 @@ const messageText = document.getElementById('message-text');
 const successTitle = document.getElementById('success-title');
 const loadingTitle = document.getElementById('loading-title');
 const errorText = document.getElementById('error-text');
+const btnErrorAccept = document.getElementById('btn-error-accept');
 const listUserIdentified = document.getElementById('list-user-identified');
 const listUserIcon = document.getElementById('list-user-icon');
 const idleBrandLogo = document.getElementById('idle-brand-logo');
@@ -150,6 +152,7 @@ function showListScanScreen(mode = 'assign') {
 }
 
 function showListErrorScreen(message, durationMs = 2000, onDone = showListScanScreen) {
+  if (btnErrorAccept) btnErrorAccept.classList.add('hidden');
   errorText.textContent = message || 'ERROR';
   setActiveScreen('errorX');
   window.clearTimeout(showListErrorScreen._timer);
@@ -239,9 +242,7 @@ async function apiRequest(endpoint, body) {
     return mockApiRequest(endpoint, body);
   }
 
-  const hasOkFlag = typeof body === 'object' && body !== null && Object.prototype.hasOwnProperty.call(body, 'ok');
-  const isFinishScan = endpoint === ENDPOINTS.finishList && (!body || !hasOkFlag);
-  const isGetEndpoint = endpoint === ENDPOINTS.getOperator || isFinishScan;
+  const isGetEndpoint = endpoint === ENDPOINTS.getOperator || endpoint === ENDPOINTS.getList;
   const options = {
     method: isGetEndpoint ? 'GET' : 'POST',
     headers: {
@@ -363,7 +364,7 @@ function generateMockFinishItems(count = 120) {
 
 async function mockApiRequest(endpoint, body) {
   await delay(250);
-  const normalizedListEan = String(body?.list_ean || body?.ean || '').trim().toUpperCase();
+  const normalizedListEan = String(body?.list_ean || body?.ean_listado || body?.ean || '').trim().toUpperCase();
   const normalizedOperatorEan = String(body?.operator_ean || body?.ean || '').trim().toUpperCase();
 
   if (endpoint === ENDPOINTS.getOperator) {
@@ -380,8 +381,8 @@ async function mockApiRequest(endpoint, body) {
     throw new Error('Listado no encontrado. Usa TESTEAN.');
   }
 
-  if (endpoint === ENDPOINTS.finishList) {
-    const finishScanId = String(body?.list_ean || body?.id || '').trim();
+  if (endpoint === ENDPOINTS.getList) {
+    const finishScanId = String(body?.list_ean || body?.ean_listado || body?.id || '').trim();
     if (body === undefined || (finishScanId && body?.ok === undefined)) {
       // Primera llamada de finalizar: devolvemos body ficticio con 120 artículos e imagen.
       return {
@@ -389,7 +390,9 @@ async function mockApiRequest(endpoint, body) {
         items: generateMockFinishItems(120)
       };
     }
+  }
 
+  if (endpoint === ENDPOINTS.finishList) {
     if (body?.ok === true) {
       await delay(2750);
       return { ok: true, message: 'Cierre total registrado (mock)' };
@@ -442,14 +445,20 @@ function renderPendingResults() {
   const filtered = state.partialItems
     .map((item, index) => ({ ...item, index }))
     .filter((item) => !item.processed)
-    .filter((item) => !query || String(item.ean || '').includes(query));
-  filtered.sort((a, b) =>
-    String(a.articulo || '').localeCompare(String(b.articulo || ''), 'es', { sensitivity: 'base' })
-  );
+    .filter((item) => !query || String(item.lineNumber || '').includes(query));
 
   const remaining = state.partialItems.filter((item) => !item.processed).length;
   partialCount.textContent = `RECOGIDOS: ${remaining}`;
   confirmedCount.textContent = `PENDIENTES PICKING: ${state.confirmedPendingItems.length}`;
+  if (state.confirmedPendingItems.length > 0) {
+    btnSendPending.textContent = 'ENVIAR CON PENDIENTES';
+    btnSendPending.classList.remove('btn-primary');
+    btnSendPending.classList.add('btn-warn');
+  } else {
+    btnSendPending.textContent = 'ENVIAR';
+    btnSendPending.classList.remove('btn-warn');
+    btnSendPending.classList.add('btn-primary');
+  }
 
   if (!filtered.length) {
     partialItemsContainer.innerHTML = '<div class="item-row-empty">SIN RESULTADOS.</div>';
@@ -462,7 +471,7 @@ function renderPendingResults() {
           <img class="item-thumb" src="${escapeHtml(item.url || 'mock-images/item-01.svg')}" alt="" />
           <div class="item-main">
             <strong>${escapeHtml(item.articulo || 'SIN DESCRIPCION')}</strong>
-            <span>EAN ${escapeHtml(item.ean || '-')}</span>
+            <span>N ${item.lineNumber} | EAN ${escapeHtml(item.ean || '-')}</span>
           </div>
         </button>`;
       })
@@ -493,7 +502,7 @@ function getFilteredPendingIndexes() {
   return state.partialItems
     .map((item, index) => ({ item, index }))
     .filter(({ item }) => !item.processed)
-    .filter(({ item }) => !query || String(item.ean || '').includes(query))
+    .filter(({ item }) => !query || String(item.lineNumber || '').includes(query))
     .map(({ index }) => index);
 }
 
@@ -543,6 +552,7 @@ function confirmPendingItem(index) {
   item.processed = true;
 
   state.confirmedPendingItems.push({
+    lineNumber: item.lineNumber,
     ean: item.ean,
     articulo: item.articulo,
     uds: item.maxQty,
@@ -560,7 +570,7 @@ function unconfirmPendingItem(confirmedIndex) {
   if (!item) return;
 
   const sourceIndex = state.partialItems.findIndex(
-    (source) => source.ean === item.ean && source.articulo === item.articulo && source.processed
+    (source) => source.lineNumber === item.lineNumber && source.processed
   );
   if (sourceIndex >= 0) {
     state.partialItems[sourceIndex].processed = false;
@@ -569,6 +579,31 @@ function unconfirmPendingItem(confirmedIndex) {
 
   state.confirmedPendingItems.splice(confirmedIndex, 1);
   renderPendingResults();
+}
+
+function openPartialFromFinishItems() {
+  let runningLineNumber = 0;
+  state.partialItems = state.finishItems.map((item) => {
+    const qty = Number(item.uds);
+    const normalizedQty = Number.isFinite(qty) && qty > 0 ? Math.round(qty) : 1;
+    runningLineNumber += normalizedQty;
+    return {
+      lineNumber: runningLineNumber,
+      ean: item.ean,
+      articulo: item.articulo,
+      url: item.url,
+      maxQty: normalizedQty,
+      pickedQty: 0,
+      processed: false
+    };
+  });
+  state.confirmedPendingItems = [];
+  inputPendingEan.value = '';
+  payloadBox.classList.add('hidden');
+  payloadPreview.textContent = '';
+  renderPendingResults();
+  setActiveScreen('partial');
+  setTimeout(() => inputPendingEan.focus(), 10);
 }
 
 btnStart.addEventListener('click', () => {
@@ -584,7 +619,7 @@ formListScan.addEventListener('submit', async (event) => {
   const ean = inputListEan.value.trim();
 
   if (!ean) {
-    showCenterModal('INTRODUCE EAN DE LISTADO', 1800);
+    showCenterModal('¿TIENE ALGUN PENDIENTE DE PICKING?', 1800);
     return;
   }
 
@@ -593,11 +628,11 @@ formListScan.addEventListener('submit', async (event) => {
     loadingTitle.textContent = isFinishMode ? 'CARGANDO LISTADO...' : 'VALIDANDO LISTADO...';
     setActiveScreen('loading');
     if (isFinishMode) {
-      const finishResponse = await apiRequest(ENDPOINTS.finishList, { list_ean: ean });
+      const finishResponse = await apiRequest(ENDPOINTS.getList, { list_ean: ean });
+      console.log('[GET_LIST][RAW_RESPONSE]', finishResponse);
       state.currentListEan = ean;
       state.finishItems = groupItemsByEan(asArrayItems(finishResponse));
-      renderFinishPreview(state.finishItems);
-      setActiveScreen('finishChoice');
+      openPartialFromFinishItems();
       return;
     }
 
@@ -643,6 +678,7 @@ btnAllPicked.addEventListener('click', async () => {
     loadingTitle.textContent = 'FINALIZANDO LISTADO...';
     setActiveScreen('loading');
     await apiRequest(ENDPOINTS.finishList, {
+      ean_listado: state.currentListEan,
       ok: true,
       items: []
     });
@@ -657,27 +693,13 @@ btnAllPicked.addEventListener('click', async () => {
 });
 
 btnPartialPicked.addEventListener('click', () => {
-  state.partialItems = state.finishItems.map((item) => ({
-    ean: item.ean,
-    articulo: item.articulo,
-    url: item.url,
-    maxQty: Number(item.uds) > 0 ? Number(item.uds) : 1,
-    pickedQty: 0,
-    processed: false
-  }));
-  state.confirmedPendingItems = [];
-  inputPendingEan.value = '';
-  payloadBox.classList.add('hidden');
-  payloadPreview.textContent = '';
-  renderPendingResults();
-  setActiveScreen('partial');
-  setTimeout(() => inputPendingEan.focus(), 10);
+  openPartialFromFinishItems();
 });
 
 btnCancelPartial.addEventListener('click', () => {
   payloadBox.classList.add('hidden');
   payloadPreview.textContent = '';
-  setActiveScreen('finishChoice');
+  toIdle();
 });
 
 keypadList.addEventListener('click', (event) => {
@@ -701,7 +723,7 @@ inputPendingEan.addEventListener('input', () => {
 
 window.addEventListener('keydown', (event) => {
   if (!screens.operator.classList.contains('hidden')) {
-    if (/^\d$/.test(event.key)) {
+    if (/^[a-zA-Z0-9]$/.test(event.key)) {
       event.preventDefault();
       inputOperatorEan.value += event.key;
       return;
@@ -821,37 +843,51 @@ btnSendPending.addEventListener('click', async () => {
     recogidas: item.recogidas
   }));
 
-  if (!notPicked.length) {
-    showError('NO HAY PENDIENTES PROCESADOS PARA ENVIAR.');
-    return;
-  }
-
-  const body = {
-    ok: false,
-    items: notPicked
-  };
-  payloadPreview.textContent = JSON.stringify(body, null, 2);
-  payloadBox.classList.remove('hidden');
+  const body =
+    notPicked.length > 0
+      ? {
+          ean_listado: state.currentListEan,
+          ok: false,
+          items: notPicked
+        }
+      : {
+          ean_listado: state.currentListEan,
+          ok: true,
+          items: []
+        };
+  payloadBox.classList.add('hidden');
+  payloadPreview.textContent = '';
 
   try {
+    console.log('[API_FIN_LIST][REQUEST_BODY]', body);
+    loadingTitle.textContent = 'FINALIZANDO...';
+    setActiveScreen('loading');
     const apiResponse = await apiRequest(ENDPOINTS.finishList, body);
-    payloadPreview.textContent = JSON.stringify(
-      {
-        enviado: body,
-        respuesta: apiResponse,
-        estado: 'Incidencia enviada correctamente'
-      },
-      null,
-      2
-    );
-    payloadBox.classList.remove('hidden');
+    console.log('[API_FIN_LIST][RESPONSE]', apiResponse);
+    const finishOk = String(apiResponse?.ok ?? '').trim() === '1' || apiResponse?.ok === true;
+    if (finishOk) {
+      successTitle.textContent = `LISTADO ${state.currentListEan || ''} FINALIZADO CORRECTAMENTE`;
+      setActiveScreen('successCheck');
+      setTimeout(() => toIdle(), 1500);
+      return;
+    }
+    setActiveScreen('partial');
+    showError(apiResponse?.error || 'NO SE PUDO FINALIZAR');
   } catch (error) {
-    showError(error.message || 'No se pudo enviar la incidencia');
+    errorText.textContent = error.message || 'NO SE PUDO FINALIZAR';
+    if (btnErrorAccept) btnErrorAccept.classList.remove('hidden');
+    setActiveScreen('errorX');
   }
 });
 
 btnMessageBack.addEventListener('click', toIdle);
 btnHomeFloat.addEventListener('click', toIdle);
+if (btnErrorAccept) {
+  btnErrorAccept.addEventListener('click', () => {
+    btnErrorAccept.classList.add('hidden');
+    toIdle();
+  });
+}
 
 window.addEventListener('load', () => {
   toIdle();
