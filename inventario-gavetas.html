@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>INVENTARIO DE GAVETAS</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./pages/inventario-gavetas/inventario-gavetas.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="panel" id="screen-inventory-list">
+        <div class="inventory-shell">
+          <h1 class="inventory-title">INVENTARIO DE GAVETAS</h1>
+          <p class="inventory-subtitle" id="inventory-count">CARGANDO...</p>
+          <div class="inventory-list" id="inventory-list"></div>
+          <div class="inventory-actions">
+            <button class="btn btn-success" id="btn-create-inventory" type="button">CREAR NUEVO INVENTARIO</button>
+            <button class="btn btn-ghost" id="btn-reload-inventories" type="button">RECARGAR INVENTARIOS</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel hidden" id="screen-inventory-lines">
+        <div class="inventory-shell">
+          <h2 id="inventory-lines-title">LINEAS INVENTARIO</h2>
+          <div class="inventory-lines-list" id="inventory-lines-list"></div>
+          <div class="inventory-lines-actions">
+            <button class="btn btn-primary" id="btn-go-count" type="button">CONTAR</button>
+            <button class="btn btn-ghost" id="btn-back-inventory-list" type="button">VOLVER A INVENTARIOS</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel hidden" id="screen-inventory-count">
+        <div class="count-shell">
+          <h2>ESCANEE EAN GAVETA</h2>
+          <div class="scan-gaveta-frame">
+            <img class="scan-gaveta-image" src="assets/images/ean_gaveta.png" alt="EAN GAVETA" />
+          </div>
+          <form id="form-count-ean" class="scan-form">
+            <input
+              id="input-count-ean"
+              class="scan-input"
+              type="text"
+              inputmode="none"
+              autocomplete="off"
+              placeholder="ESCANEE EAN"
+              readonly
+              required
+            />
+            <div class="scan-form-actions">
+              <button class="btn btn-ghost" id="btn-back-lines" type="button">ATRAS</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel hidden" id="screen-inventory-operator">
+        <img class="ope-image" src="assets/images/ope.png" alt="OPERARIO" />
+        <h2>ESCANEE ID OPERARIO</h2>
+        <form id="form-inventory-operator-scan" class="scan-form">
+          <input
+            id="input-inventory-operator-ean"
+            type="text"
+            inputmode="none"
+            autocomplete="off"
+            placeholder="EAN OPERARIO"
+            readonly
+            required
+          />
+          <div class="scan-form-actions">
+            <button class="btn btn-ghost" id="btn-back-from-operator" type="button">ATRAS</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel hidden" id="screen-inventory-var">
+        <div class="inventory-var-shell">
+          <div class="inventory-var-card">
+            <div class="inventory-var-image-wrap">
+              <img id="var-detail-image" class="inventory-var-image" src="mock-images/item-01.svg" alt="ARTICULO" />
+            </div>
+            <strong id="var-detail-name" class="inventory-var-name">ARTICULO</strong>
+          </div>
+
+          <form id="form-var-detail" class="scan-form" novalidate>
+            <div class="keypad keypad-compact" id="inventory-var-keypad">
+              <button class="btn keypad-btn" type="button" data-key="1">1</button>
+              <button class="btn keypad-btn" type="button" data-key="2">2</button>
+              <button class="btn keypad-btn" type="button" data-key="3">3</button>
+              <button class="btn keypad-btn" type="button" data-key="4">4</button>
+              <button class="btn keypad-btn" type="button" data-key="5">5</button>
+              <button class="btn keypad-btn" type="button" data-key="6">6</button>
+              <button class="btn keypad-btn" type="button" data-key="7">7</button>
+              <button class="btn keypad-btn" type="button" data-key="8">8</button>
+              <button class="btn keypad-btn" type="button" data-key="9">9</button>
+              <button class="btn keypad-btn keypad-action" type="button" data-key="clear">LIMPIAR</button>
+              <button class="btn keypad-btn" type="button" data-key="0">0</button>
+              <button class="btn keypad-btn keypad-action" type="button" data-key="back">BORRAR</button>
+            </div>
+
+            <input
+              id="input-var-uds"
+              type="text"
+              inputmode="none"
+              autocomplete="off"
+              placeholder="UNIDADES CONTADAS"
+              readonly
+            />
+
+            <button class="inventory-var-toggle" id="btn-toggle-avisos" type="button" aria-expanded="false">
+              <span>CAMBIAR UDS AVISOS</span>
+              <span id="toggle-avisos-arrow" class="inventory-var-toggle-arrow">▾</span>
+            </button>
+
+            <div id="inventory-var-advanced" class="inventory-var-advanced hidden">
+              <label class="inventory-var-field-row" for="input-var-stock-max">
+                <span>UDS MAXIMAS POR GAVETA</span>
+                <input id="input-var-stock-max" type="text" inputmode="none" autocomplete="off" readonly />
+              </label>
+              <label class="inventory-var-field-row" for="input-var-stock-min">
+                <span>UDS MINIMAS PARA AVISOS DE STOCK</span>
+                <input id="input-var-stock-min" type="text" inputmode="none" autocomplete="off" readonly />
+              </label>
+            </div>
+
+            <p id="var-form-error" class="inventory-var-form-error hidden"></p>
+
+            <div class="scan-form-actions">
+              <button class="btn btn-primary" type="submit">VALIDAR</button>
+              <button class="btn btn-ghost" id="btn-back-to-scan" type="button">ATRAS</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel panel-loading hidden" id="screen-inventory-loading">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <h2 id="inventory-loading-title">CARGANDO...</h2>
+      </section>
+
+      <section class="panel panel-success hidden" id="screen-inventory-success">
+        <div class="check-wrap" aria-hidden="true">
+          <svg class="check-svg" viewBox="0 0 72 72">
+            <circle class="check-circle" cx="36" cy="36" r="30"></circle>
+            <path class="check-mark" d="M22 37l9 9 19-19"></path>
+          </svg>
+        </div>
+        <h2 id="inventory-success-text">CREADO CON EXITO</h2>
+      </section>
+
+      <section class="panel panel-error hidden" id="screen-inventory-error">
+        <div class="x-wrap" aria-hidden="true">
+          <svg class="x-svg" viewBox="0 0 72 72">
+            <circle class="x-circle" cx="36" cy="36" r="30"></circle>
+            <path class="x-mark" d="M24 24l24 24"></path>
+            <path class="x-mark x-mark-second" d="M48 24L24 48"></path>
+          </svg>
+        </div>
+        <h2>ERROR</h2>
+        <p id="inventory-error-text"></p>
+      </section>
+
+      <button class="btn btn-ghost btn-menu-float" id="btn-main-menu" type="button">MENU PRINCIPAL</button>
+      <div id="inventory-operator-badge" class="inventory-operator-badge hidden"></div>
+      <div class="error-banner hidden" id="error-banner"></div>
+    </main>
+
+    <script src="../env-config.js"></script>
+    <script src="./pages/inventario-gavetas/inventario-gavetas.js"></script>
+  </body>
+</html>

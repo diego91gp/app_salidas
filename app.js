@@ -77,6 +77,7 @@ const btnCancelPartial = document.getElementById('btn-cancel-partial');
 const btnSendPending = document.getElementById('btn-send-pending');
 const btnMessageBack = document.getElementById('btn-message-back');
 const btnHomeFloat = document.getElementById('btn-home-float');
+const btnMenuFloat = document.getElementById('btn-menu-float');
 const btnPendingSingleConfirm = document.getElementById('btn-pending-single-confirm');
 const btnPendingQtyDec = document.getElementById('btn-pending-qty-dec');
 const btnPendingQtyInc = document.getElementById('btn-pending-qty-inc');
@@ -267,6 +268,7 @@ async function apiRequest(endpoint, body) {
     if (qs) {
       url += `?${qs}`;
     }
+    options.cache = 'no-store';
   } else {
     options.headers['Content-Type'] = 'application/json';
     if (body !== undefined) {
@@ -882,6 +884,11 @@ btnSendPending.addEventListener('click', async () => {
 
 btnMessageBack.addEventListener('click', toIdle);
 btnHomeFloat.addEventListener('click', toIdle);
+if (btnMenuFloat) {
+  btnMenuFloat.addEventListener('click', () => {
+    window.location.href = './index.html';
+  });
+}
 if (btnErrorAccept) {
   btnErrorAccept.addEventListener('click', () => {
     btnErrorAccept.classList.add('hidden');

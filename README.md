@@ -1,44 +1,65 @@
-# App Web Interna - Control de Listados
+# App Web Interna - SIROKO
 
-Aplicación estática pensada para tablet en formato apaisado, con flujo de escaneo por lector de código de barras (EAN + Enter).
+Aplicacion web interna pensada para tablet en formato apaisado.
 
-## Estructura
+## Estructura recomendada
 
-- `index.html`: interfaz principal
-- `styles.css`: estilo oscuro optimizado para uso continuo en tablet
-- `app.js`: lógica de pantallas + llamadas API
-- `.htaccess.example`: ejemplo para proteger con login en Apache
+- `index.html`
+  - Menu principal de modulos.
+  - Carga sus propios recursos:
+    - `pages/menu/menu.css`
+    - `pages/menu/menu.js`
+- `sacar-listados.html`
+  - Pantalla principal del modulo de listados (flujo operativo actual).
+  - Carga:
+    - `styles.css`
+    - `app.js`
+- `fichar.html`
+  - Pantalla placeholder del modulo fichar.
+- `inventario-gavetas.html`
+  - Pantalla del modulo inventario de gavetas.
+  - Carga:
+    - `pages/inventario-gavetas/inventario-gavetas.css`
+    - `pages/inventario-gavetas/inventario-gavetas.js`
+- `pages/inventario-gavetas/inventario-gavetas.css`
+  - Estilos propios del modulo inventario de gavetas (reutilizando estilo base global).
+- `pages/inventario-gavetas/inventario-gavetas.js`
+  - Logica del modulo inventario de gavetas.
+  - Carga inventarios abiertos desde API y gestiona pantalla de escaneo.
+- `styles.css`
+  - Estilos del modulo sacar listados.
+- `app.js`
+  - Logica del modulo sacar listados + llamadas API.
 
-## Flujo implementado
+## Endpoints actuales (modulo sacar listados)
 
-1. Pantalla de espera con:
-   - `Empezar listado`
-   - `Terminar listado`
-2. Empezar listado:
-   - Escaneo de listado -> `POST /API/GET_SAL_LIST` con body `{ "ean": "..." }`
-   - Si OK: pide escaneo operario -> `POST /API/GET_OPE` con body `{ "ean": "...", "listEan": "..." }`
-   - Si OK: vuelve a pantalla espera
-   - Si error: muestra error y vuelve a pedir operario
-3. Terminar listado:
-   - Llama a `POST /API/FIN_LIST`
-   - Si OK y devuelve items (`[{ean, articulo, uds}]`), pantalla de decisión:
-     - `He recogido todo` -> `POST /API/FIN_LIST` con `{ "ok": true, "items": [] }`
-     - `No pude recoger todo` -> selección de items/uds no recogidos y envío `POST /API/FIN_LIST` con `{ "ok": false, "items": [...] }`
+Base URL: definida en `../env-config.js` como `BASE_URL`.
 
-## Ajuste de API
+- `GET /api/API_GET_OPE`
+- `POST /api/API_ASSIGN_SAL_LIST`
+- `GET /api/API_GET_LIST`
+- `POST /api/API_FIN_LIST`
 
-En `app.js`:
+## Endpoint actual (modulo inventario de gavetas)
 
-- Cambia `API_BASE` si necesitas prefijo (ejemplo: `'/miapp'`).
-- Si tu API usa `GET` en vez de `POST`, adapta `apiRequest()`.
+- `GET /api/API_GET_PICKING_INV`
+  - Configurable con `PICKING_INV_ENDPOINT` en `env-config.js`.
+  - Respuesta esperada: array de objetos con `name`, `id`, `url`.
 
-## Protección con Apache
+## Configuracion de entorno
 
-1. Copia `.htaccess.example` a `.htaccess`
-2. Ajusta la ruta de `AuthUserFile`
-3. Crea usuarios:
+Archivo global fuera del modulo: `../env-config.js`
 
-```bash
-htpasswd -c /ruta/segura/.htpasswd usuario_interno
-```
+Campos usados:
 
+- `BASE_URL`
+- `AUTHORIZATION_TOKEN`
+- `API_KEY` (opcional, segun backend)
+
+## Nota de arquitectura
+
+Para crecer sin romper modulos:
+
+- cada modulo nuevo debe tener su propio `html` + `css` + `js`;
+- evitar meter logica de modulos nuevos dentro de `app.js` de listados;
+- mantener `index.html` solo como enrutador/menu.

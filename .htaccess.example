@@ -1,4 +1,0 @@
-AuthType Basic
-AuthName "Acceso Interno - Control de Listados"
-AuthUserFile /etc/apache2/seguridad/listado_tablet/.htpasswd
-Require valid-user
