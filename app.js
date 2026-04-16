@@ -66,6 +66,8 @@ const errorText = document.getElementById('error-text');
 const btnErrorAccept = document.getElementById('btn-error-accept');
 const listUserIdentified = document.getElementById('list-user-identified');
 const listUserIcon = document.getElementById('list-user-icon');
+const operatorBadge = document.getElementById('operator-badge');
+const operatorBadgeName = document.getElementById('operator-badge-name');
 const idleBrandLogo = document.getElementById('idle-brand-logo');
 const idleMainTitle = document.getElementById('idle-main-title');
 
@@ -77,7 +79,6 @@ const btnCancelPartial = document.getElementById('btn-cancel-partial');
 const btnSendPending = document.getElementById('btn-send-pending');
 const btnMessageBack = document.getElementById('btn-message-back');
 const btnHomeFloat = document.getElementById('btn-home-float');
-const btnMenuFloat = document.getElementById('btn-menu-float');
 const btnPendingSingleConfirm = document.getElementById('btn-pending-single-confirm');
 const btnPendingQtyDec = document.getElementById('btn-pending-qty-dec');
 const btnPendingQtyInc = document.getElementById('btn-pending-qty-inc');
@@ -112,6 +113,7 @@ function applyKeyToInput(inputEl, key) {
 function setActiveScreen(key) {
   Object.values(screens).forEach((screen) => screen.classList.add('hidden'));
   screens[key].classList.remove('hidden');
+  btnHomeFloat.classList.toggle('hidden', key === 'idle');
 }
 
 function showError(message) {
@@ -131,22 +133,19 @@ function showCenterModal(message, durationMs = 2000) {
 function showListScanScreen(mode = 'assign') {
   state.listScanMode = mode;
   setActiveScreen('idle');
+  btnHomeFloat.classList.remove('hidden');
   idleActions.classList.add('hidden');
   formListScan.classList.remove('hidden');
   inputListEan.value = '';
   if (idleBrandLogo) idleBrandLogo.classList.add('hidden');
   if (idleMainTitle) idleMainTitle.classList.add('hidden');
   const isFinishMode = mode === 'finish';
-  if (listUserIcon) {
-    listUserIcon.classList.toggle('hidden', isFinishMode);
-  }
-  if (listUserIdentified) {
+  if (operatorBadge) {
     if (isFinishMode) {
-      listUserIdentified.classList.add('hidden');
+      operatorBadge.classList.add('hidden');
     } else {
-      const operatorLabel = state.currentOperatorName || '-';
-      listUserIdentified.textContent = `IDENTIFICADO COMO "${operatorLabel}"`;
-      listUserIdentified.classList.remove('hidden');
+      operatorBadgeName.textContent = state.currentOperatorName || '-';
+      operatorBadge.classList.remove('hidden');
     }
   }
   setTimeout(() => inputListEan.focus(), 10);
@@ -194,11 +193,7 @@ function toIdle() {
   formListScan.classList.add('hidden');
   if (idleBrandLogo) idleBrandLogo.classList.remove('hidden');
   if (idleMainTitle) idleMainTitle.classList.remove('hidden');
-  if (listUserIcon) listUserIcon.classList.remove('hidden');
-  if (listUserIdentified) {
-    listUserIdentified.textContent = 'IDENTIFICADO COMO "-"';
-    listUserIdentified.classList.remove('hidden');
-  }
+  if (operatorBadge) operatorBadge.classList.add('hidden');
   setActiveScreen('idle');
 }
 
@@ -884,11 +879,6 @@ btnSendPending.addEventListener('click', async () => {
 
 btnMessageBack.addEventListener('click', toIdle);
 btnHomeFloat.addEventListener('click', toIdle);
-if (btnMenuFloat) {
-  btnMenuFloat.addEventListener('click', () => {
-    window.location.href = './index.html';
-  });
-}
 if (btnErrorAccept) {
   btnErrorAccept.addEventListener('click', () => {
     btnErrorAccept.classList.add('hidden');

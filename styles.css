@@ -1,4 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Russo+One&display=swap');
+
 :root {
+  --font-brand: "Russo One", "Segoe UI", "Noto Sans", sans-serif;
+  --font-ui: "Segoe UI", "Noto Sans", sans-serif;
   --bg: #0e1117;
   --panel: #171c26;
   --panel-2: #1f2633;
@@ -10,6 +14,7 @@
   --danger: #ff5d73;
   --border: #2f3a4a;
   --shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  --shell-pad-block: clamp(4.8rem, 9vh, 6.8rem);
 }
 
 * {
@@ -29,7 +34,7 @@ body {
     radial-gradient(circle at 90% 85%, rgba(46, 204, 113, 0.1), transparent 28%),
     linear-gradient(165deg, #0a0d13, var(--bg));
   color: var(--text);
-  font-family: "Segoe UI", "Noto Sans", sans-serif;
+  font-family: var(--font-ui);
   text-transform: uppercase;
 }
 
@@ -39,17 +44,34 @@ body * {
 
 body {
   overflow: hidden;
-  width: 100vw;
-  height: 100vh;
+  width: 100dvw;
+  height: 100dvh;
   display: grid;
   place-items: center;
   padding: 0;
 }
 
+.global-top-logo {
+  position: fixed;
+  top: max(6px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  width: clamp(280px, 42vw, 460px);
+  height: auto;
+  z-index: 1000;
+  cursor: pointer;
+  opacity: 1;
+  transition: opacity 0.15s;
+}
+.global-top-logo:hover {
+  opacity: 0.7;
+}
+
 .app-shell {
-  width: 100vw;
-  height: 100vh;
-  padding: 0.8rem;
+  width: 100dvw;
+  height: 100dvh;
+  min-height: 100dvh;
+  padding: var(--shell-pad-block) 0.8rem calc(1.2rem + env(safe-area-inset-bottom));
   display: grid;
   place-items: center;
   background: linear-gradient(160deg, #101520, #0d1119);
@@ -62,7 +84,7 @@ body {
   background: transparent;
   border: 0;
   border-radius: 0;
-  padding: 1.4rem;
+  padding: clamp(0.9rem, 2vh, 1.4rem);
   box-shadow: none;
   display: grid;
   align-content: center;
@@ -70,8 +92,8 @@ body {
   animation: panel-in 0.18s ease-out;
   max-width: 1024px;
   width: 100%;
-  min-height: calc(100vh - 1.6rem);
-  max-height: calc(100vh - 1.6rem);
+  min-height: 100%;
+  max-height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   justify-self: center;
@@ -173,6 +195,7 @@ body {
   margin: 0;
   font-size: clamp(1.5rem, 2.8vw, 2rem);
   text-align: center;
+  font-family: var(--font-brand);
 }
 
 .panel p {
@@ -180,6 +203,7 @@ body {
   color: var(--muted);
   font-size: 1.02rem;
   text-align: center;
+  font-family: var(--font-brand);
 }
 
 .scan-form {
@@ -198,6 +222,7 @@ input {
   border-radius: 12px;
   padding: 0.9rem 1rem;
   font-size: 1.15rem;
+  font-family: var(--font-ui);
 }
 
 input::placeholder {
@@ -229,8 +254,16 @@ input:focus {
   padding: 0.9rem 1rem;
   font-size: 1rem;
   font-weight: 600;
+  font-family: var(--font-ui);
   cursor: pointer;
   transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.keypad-btn,
+.qty-btn,
+.qty-input,
+input[type='number'] {
+  font-family: var(--font-ui);
 }
 
 .btn:hover {
@@ -436,8 +469,8 @@ input:focus {
 }
 
 .keypad-compact .keypad-btn {
-  min-height: 64px;
-  font-size: 1.35rem;
+  min-height: 50px;
+  font-size: 1.1rem;
 }
 
 .keypad-btn {
@@ -448,6 +481,11 @@ input:focus {
   color: #d6ebff;
   width: 100%;
   min-width: 0;
+}
+
+#form-list-scan input {
+  padding: 0.55rem 0.85rem;
+  font-size: 0.95rem;
 }
 
 .keypad-action {
@@ -593,13 +631,39 @@ input:focus {
   z-index: 60;
 }
 
-.btn-home-float {
+.operator-badge {
   position: fixed;
   right: 1.4rem;
-  bottom: 1.2rem;
-  z-index: 40;
+  top: calc(var(--shell-pad-block) / 2);
+  transform: translateY(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   background: rgba(13, 18, 28, 0.85);
   backdrop-filter: blur(2px);
+  padding: 0.45rem 0.7rem 0.45rem 0.45rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.btn-home-float {
+  position: fixed;
+  left: 1.4rem;
+  top: calc(var(--shell-pad-block) / 2);
+  transform: translateY(-50%);
+  z-index: 1000;
+  background: rgba(13, 18, 28, 0.85);
+  backdrop-filter: blur(2px);
+  padding: 0.45rem;
+  line-height: 0;
+  border-radius: 10px;
 }
 
 .btn-menu-float {
@@ -728,12 +792,12 @@ input:focus {
   .app-shell {
     width: 100%;
     height: 100%;
-    padding: 0.8rem;
+    padding: var(--shell-pad-block) 0.7rem calc(1.2rem + env(safe-area-inset-bottom));
   }
 
   .panel {
-    min-height: calc(100vh - 1.6rem);
-    max-height: calc(100vh - 1.6rem);
+    min-height: 100%;
+    max-height: 100%;
   }
 
   .panel h2 {
@@ -762,13 +826,33 @@ input:focus {
   }
 
   .btn-home-float {
-    right: 0.8rem;
-    bottom: 0.8rem;
+    left: 0.8rem;
+    top: calc(var(--shell-pad-block) / 2);
+  }
+}
+
+@media (max-width: 768px), (max-height: 700px) {
+  :root {
+    --shell-pad-block: clamp(4.2rem, 8vh, 5.6rem);
   }
 
-  .btn-menu-float {
-    right: 0.8rem;
-    bottom: 4.4rem;
+  .global-top-logo {
+    width: clamp(230px, 58vw, 360px);
   }
 
+  .btn-main-action {
+    min-height: 88px;
+    font-size: clamp(1.1rem, 3.4vw, 1.45rem);
+  }
+
+  .keypad-btn {
+    min-height: 64px;
+    font-size: 1.35rem;
+  }
+
+  .qty-controls-large .qty-btn,
+  .qty-controls-large .qty-input {
+    min-height: 68px;
+    font-size: 1.55rem;
+  }
 }

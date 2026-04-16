@@ -9,20 +9,16 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <a href="./index.html"><img class="global-top-logo" src="assets/images/siroko_letras.png" alt="SIROKO" /></a>
     <main class="app-shell">
       <section class="panel" id="screen-idle">
-        <img class="brand-logo" id="idle-brand-logo" src="assets/images/512.png" alt="Logo empresa" />
         <h1 class="idle-title" id="idle-main-title">GESTION LISTADOS PICKING</h1>
         <div class="cta-row cta-col" id="idle-actions">
           <button class="btn btn-primary btn-main-action" id="btn-start">Empezar listado</button>
           <button class="btn btn-warn btn-main-action" id="btn-finish">Terminar listado</button>
         </div>
         <form id="form-list-scan" class="scan-form hidden">
-          <div class="list-scan-head">
-            <div class="list-user-icon" id="list-user-icon">👤</div>
-            <p id="list-user-identified">IDENTIFICADO COMO "-"</p>
-            <h2>ESCANEAR EAN LISTADO</h2>
-          </div>
+          <h2>ESCANEAR EAN LISTADO</h2>
           <div class="scan-example-frame">
             <img
               class="scan-example-image"
@@ -181,8 +177,13 @@
         <button class="btn btn-primary" id="btn-message-back">Volver a inicio</button>
       </section>
 
-      <button class="btn btn-ghost btn-menu-float" id="btn-menu-float" type="button">Menu principal</button>
-      <button class="btn btn-ghost btn-home-float" id="btn-home-float" type="button">Inicio</button>
+<div class="operator-badge hidden" id="operator-badge">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+  <span id="operator-badge-name"></span>
+</div>
+<button class="btn btn-ghost btn-home-float hidden" id="btn-home-float" type="button" aria-label="Volver">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+</button>
       <div class="error-banner hidden" id="error-banner"></div>
       <div class="center-modal hidden" id="center-modal"></div>
     </main>

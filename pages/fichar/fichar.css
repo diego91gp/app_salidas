@@ -1,0 +1,45 @@
+.btn-danger {
+  background: var(--danger);
+  color: #1a0307;
+}
+
+.fichar-actions {
+  max-width: 760px;
+}
+
+/* Cronómetro en vivo */
+.fichar-chrono {
+  display: grid;
+  justify-items: center;
+  gap: 0.3rem;
+  padding: 1.2rem 1.6rem;
+  border: 1px solid rgba(62, 166, 255, 0.3);
+  border-radius: 18px;
+  background: rgba(62, 166, 255, 0.06);
+  max-width: 480px;
+  width: 100%;
+  justify-self: center;
+  animation: chrono-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes chrono-pulse {
+  0%, 100% { border-color: rgba(62, 166, 255, 0.3); }
+  50%       { border-color: rgba(62, 166, 255, 0.7); }
+}
+
+.fichar-chrono-time {
+  font-family: var(--font-brand);
+  font-size: clamp(2.8rem, 7vw, 5rem);
+  font-weight: 900;
+  color: var(--primary);
+  letter-spacing: 0.06em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.fichar-chrono-since {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+}

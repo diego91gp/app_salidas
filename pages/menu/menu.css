@@ -1,9 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Russo+One&display=swap');
+
 :root {
+  --font-brand: "Russo One", "Segoe UI", "Noto Sans", sans-serif;
+  --font-ui: "Segoe UI", "Noto Sans", sans-serif;
   --bg: #0e1117;
   --text: #f2f5f8;
   --primary: #3ea6ff;
   --secondary: #ff9f43;
   --muted: #9ba7b8;
+  --menu-pad-block: clamp(4.8rem, 9vh, 6.8rem);
 }
 
 * {
@@ -15,12 +20,9 @@ body {
   margin: 0;
   width: 100%;
   height: 100%;
-  background:
-    radial-gradient(circle at 8% 10%, rgba(62, 166, 255, 0.15), transparent 30%),
-    radial-gradient(circle at 90% 85%, rgba(255, 159, 67, 0.1), transparent 28%),
-    linear-gradient(165deg, #0a0d13, var(--bg));
+  background: linear-gradient(160deg, #101520, #0d1119);
   color: var(--text);
-  font-family: "Segoe UI", "Noto Sans", sans-serif;
+  font-family: var(--font-ui);
   text-transform: uppercase;
 }
 
@@ -30,11 +32,26 @@ body {
   overflow: hidden;
 }
 
+.global-top-logo {
+  position: fixed;
+  top: max(6px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  width: clamp(280px, 42vw, 460px);
+  height: auto;
+  border-radius: 16px;
+  z-index: 1000;
+  pointer-events: none;
+}
+
 .menu-shell {
   width: min(900px, 94vw);
+  min-height: calc(100dvh - (var(--menu-pad-block) * 2));
   display: grid;
   gap: 1.1rem;
+  align-content: center;
   justify-items: center;
+  padding: var(--menu-pad-block) 0 clamp(var(--menu-pad-block) + env(safe-area-inset-bottom));
 }
 
 .menu-logo {
@@ -57,6 +74,7 @@ body {
   border-radius: 14px;
   font-size: clamp(1.25rem, 2.6vw, 1.8rem);
   font-weight: 800;
+  font-family: var(--font-ui);
   letter-spacing: 0.05em;
   cursor: pointer;
   color: #071321;
@@ -81,4 +99,19 @@ body {
   opacity: 0.55;
   filter: grayscale(0.25);
   cursor: not-allowed;
+}
+
+@media (max-width: 768px), (max-height: 700px) {
+  :root {
+    --menu-pad-block: clamp(4.2rem, 8vh, 5.6rem);
+  }
+
+  .global-top-logo {
+    width: clamp(230px, 58vw, 360px);
+  }
+
+  .menu-btn {
+    min-height: 80px;
+    font-size: clamp(1rem, 3.6vw, 1.35rem);
+  }
 }

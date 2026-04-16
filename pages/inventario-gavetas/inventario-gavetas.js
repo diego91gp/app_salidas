@@ -51,7 +51,6 @@ const inputInventoryOperatorEan = document.getElementById('input-inventory-opera
 
 const btnReload = document.getElementById('btn-reload-inventories');
 const btnCreateInventory = document.getElementById('btn-create-inventory');
-const btnMainMenu = document.getElementById('btn-main-menu');
 const btnGoCount = document.getElementById('btn-go-count');
 const btnBackInventoryList = document.getElementById('btn-back-inventory-list');
 const btnBackLines = document.getElementById('btn-back-lines');
@@ -278,13 +277,18 @@ async function apiRequest(endpoint, method = 'GET', body, queryParams = {}) {
 
 function renderInventoryList() {
   const list = state.inventories;
-  inventoryCountEl.textContent = `${list.length} INVENTARIOS ABIERTOS`;
+  if (inventoryCountEl) {
+    inventoryCountEl.textContent = '';
+    inventoryCountEl.classList.add('hidden');
+  }
 
   if (!list.length) {
-    inventoryListEl.innerHTML = '<div class="inventory-empty">NO HAY INVENTARIOS ABIERTOS</div>';
+    inventoryListEl.innerHTML = '';
+    inventoryListEl.classList.add('hidden');
     return;
   }
 
+  inventoryListEl.classList.remove('hidden');
   inventoryListEl.innerHTML = list
     .map(
       (item, idx) => `
@@ -380,12 +384,6 @@ async function loadLinesForInventory(invId) {
 
 btnReload.addEventListener('click', loadInventories);
 btnCreateInventory.addEventListener('click', createInventoryAndLoadLines);
-btnMainMenu.addEventListener('click', () => {
-  state.currentOperatorName = '';
-  state.currentOperatorEan = '';
-  renderOperatorBadge();
-  window.location.href = './index.html';
-});
 btnBackInventoryList.addEventListener('click', () => setScreen('list'));
 btnGoCount.addEventListener('click', () => {
   if (!state.currentOperatorEan) {

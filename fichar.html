@@ -3,49 +3,76 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Fichar</title>
-    <style>
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        background: #0e1117;
-        color: #f2f5f8;
-        font-family: "Segoe UI", "Noto Sans", sans-serif;
-        text-transform: uppercase;
-      }
-
-      .box {
-        width: min(900px, 92vw);
-        text-align: center;
-      }
-
-      h1 {
-        margin: 0 0 1rem;
-      }
-
-      p {
-        color: #9ba7b8;
-      }
-
-      a {
-        display: inline-block;
-        margin-top: 1.2rem;
-        padding: 0.85rem 1.2rem;
-        border-radius: 10px;
-        text-decoration: none;
-        background: #3ea6ff;
-        color: #061320;
-        font-weight: 700;
-      }
-    </style>
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>FICHAR</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./pages/fichar/fichar.css" />
   </head>
   <body>
-    <main class="box">
-      <h1>Fichar</h1>
-      <p>Pantalla en construccion.</p>
-      <a href="index.html">Volver al menu</a>
+    <a href="./index.html"><img class="global-top-logo" src="assets/images/siroko_letras.png" alt="SIROKO" /></a>
+    <main class="app-shell">
+
+      <section class="panel" id="screen-operator">
+        <h1 class="idle-title">CONTROL HORARIO</h1>
+        <img class="ope-image" src="assets/images/ope.png" alt="OPERARIO" />
+        <h2>ESCANEAR ID OPERARIO</h2>
+        <form id="form-operator-scan" class="scan-form">
+          <input
+            id="input-operator-ean"
+            type="text"
+            inputmode="none"
+            autocomplete="off"
+            placeholder="EAN OPERARIO"
+            readonly
+            required
+          />
+        </form>
+      </section>
+
+      <section class="panel hidden" id="screen-action">
+        <h2 id="action-operator-name">OPERARIO</h2>
+        <div class="fichar-chrono hidden" id="fichar-chrono">
+          <div class="fichar-chrono-time" id="fichar-chrono-time">00:00:00</div>
+          <p class="fichar-chrono-since" id="fichar-chrono-since">EN CURSO DESDE --:--</p>
+        </div>
+        <div class="cta-row fichar-actions">
+          <button class="btn btn-success btn-main-action" id="btn-entrada" type="button">ENTRADA</button>
+          <button class="btn btn-danger btn-main-action" id="btn-salida" type="button">SALIDA</button>
+        </div>
+      </section>
+
+      <section class="panel panel-loading hidden" id="screen-loading">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <h2 id="loading-title">CARGANDO...</h2>
+      </section>
+
+      <section class="panel panel-success hidden" id="screen-success">
+        <div class="check-wrap" aria-hidden="true">
+          <svg class="check-svg" viewBox="0 0 72 72">
+            <circle class="check-circle" cx="36" cy="36" r="30"></circle>
+            <path class="check-mark" d="M22 37l9 9 19-19"></path>
+          </svg>
+        </div>
+        <h2 id="success-title">COMPLETADO</h2>
+      </section>
+
+      <section class="panel panel-error hidden" id="screen-error">
+        <div class="x-wrap" aria-hidden="true">
+          <svg class="x-svg" viewBox="0 0 72 72">
+            <circle class="x-circle" cx="36" cy="36" r="30"></circle>
+            <path class="x-mark" d="M24 24l24 24"></path>
+            <path class="x-mark x-mark-second" d="M48 24L24 48"></path>
+          </svg>
+        </div>
+        <h2>ERROR</h2>
+        <p id="error-text"></p>
+      </section>
+
+<div class="error-banner hidden" id="error-banner"></div>
     </main>
+
+    <script src="../env-config.js"></script>
+    <script src="./pages/fichar/fichar.js"></script>
   </body>
 </html>

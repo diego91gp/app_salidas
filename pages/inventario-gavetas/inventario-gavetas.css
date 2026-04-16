@@ -38,17 +38,28 @@
   display: grid;
   grid-template-columns: 68px 1fr;
   gap: 0.8rem;
-  text-align: left;
+  text-align: center;
   align-items: center;
-  padding: 0.85rem;
+  padding: 1.05rem 1rem;
 }
 
 .inventory-item {
   cursor: pointer;
+  min-height: 84px;
+  border-radius: 12px;
+  border: 1px solid rgba(62, 166, 255, 0.28);
+  margin: 0.3rem;
+  transition: background 0.14s ease, border-color 0.14s ease, transform 0.1s ease;
 }
 
 .inventory-item:hover {
-  background: rgba(18, 29, 46, 0.6);
+  background: rgba(21, 34, 53, 0.78);
+  border-color: rgba(62, 166, 255, 0.58);
+  transform: translateY(-1px);
+}
+
+.inventory-item:active {
+  transform: translateY(0);
 }
 
 .inventory-item-simple {
@@ -68,6 +79,7 @@
   min-width: 0;
   display: grid;
   gap: 0.22rem;
+  justify-items: center;
 }
 
 .inventory-main strong {
