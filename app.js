@@ -461,7 +461,6 @@ function renderPendingResults() {
     partialItemsContainer.innerHTML = '<div class="item-row-empty">SIN RESULTADOS.</div>';
   } else {
     partialItemsContainer.innerHTML = filtered
-      .slice(0, 30)
       .map((item) => {
         return `
         <button class="pending-result ${item.processed ? 'pending-result-done' : ''}" data-index="${item.index}">

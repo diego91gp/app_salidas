@@ -1,8 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Russo+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;600;700;800;900&display=swap');
 
 :root {
-  --font-brand: "Russo One", "Segoe UI", "Noto Sans", sans-serif;
-  --font-ui: "Segoe UI", "Noto Sans", sans-serif;
+  --font-brand: "Roboto", sans-serif;
+  --font-ui: "Roboto", sans-serif;
   --bg: #0e1117;
   --panel: #171c26;
   --panel-2: #1f2633;
@@ -246,6 +246,59 @@ input:focus {
 .cta-row.cta-col {
   grid-template-columns: 1fr;
   max-width: 620px;
+}
+
+/* ── Tarjetas de acción idle (mismo lenguaje que menú) ── */
+.idle-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(1rem, 2.5vw, 1.6rem);
+  width: min(680px, 92vw);
+  justify-self: center;
+}
+
+.idle-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: clamp(1.4rem, 3.5vh, 2.4rem) 1.2rem;
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  color: var(--text);
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: border-color 0.18s, transform 0.15s, box-shadow 0.18s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.idle-card:hover {
+  border-color: rgba(62, 166, 255, 0.55);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 32px rgba(62, 166, 255, 0.12);
+}
+
+.idle-card:active {
+  transform: translateY(-1px);
+  box-shadow: none;
+}
+
+.idle-card svg {
+  width: clamp(48px, 6vw, 68px);
+  height: clamp(48px, 6vw, 68px);
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.idle-card span {
+  font-size: clamp(0.9rem, 1.6vw, 1.15rem);
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-align: center;
+  line-height: 1.25;
+  text-transform: uppercase;
 }
 
 .btn {
@@ -666,6 +719,10 @@ input[type='number'] {
   border-radius: 10px;
 }
 
+.btn-home-float:hover {
+  transform: translateY(-50%);
+}
+
 .btn-menu-float {
   position: fixed;
   right: 1.4rem;
@@ -843,6 +900,23 @@ input[type='number'] {
   .btn-main-action {
     min-height: 88px;
     font-size: clamp(1.1rem, 3.4vw, 1.45rem);
+  }
+
+  .idle-card-grid {
+    grid-template-columns: 1fr;
+    width: min(400px, 92vw);
+  }
+
+  .idle-card {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 1rem 1.4rem;
+    gap: 1.2rem;
+    border-radius: 14px;
+  }
+
+  .idle-card span {
+    text-align: left;
   }
 
   .keypad-btn {

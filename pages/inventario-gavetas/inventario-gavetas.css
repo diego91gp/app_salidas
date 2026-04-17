@@ -21,7 +21,10 @@
 .inventory-lines-list {
   width: 100%;
   max-height: 58vh;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+  padding: 0.3rem;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: rgba(4, 9, 15, 0.45);
@@ -48,7 +51,7 @@
   min-height: 84px;
   border-radius: 12px;
   border: 1px solid rgba(62, 166, 255, 0.28);
-  margin: 0.3rem;
+  margin-bottom: 0.3rem;
   transition: background 0.14s ease, border-color 0.14s ease, transform 0.1s ease;
 }
 
@@ -93,7 +96,14 @@
   overflow-wrap: anywhere;
 }
 
-.inventory-actions,
+.inventory-actions {
+  width: 100%;
+  justify-self: center;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(1rem, 2.5vw, 1.6rem);
+}
+
 .inventory-lines-actions {
   width: 100%;
   max-width: 760px;
@@ -294,5 +304,25 @@
   .inventory-list,
   .inventory-lines-list {
     max-height: 52vh;
+  }
+}
+
+@media (max-width: 768px), (max-height: 600px) {
+  .inventory-actions {
+    grid-template-columns: 1fr;
+    max-width: min(420px, 92vw);
+    justify-self: center;
+  }
+
+  .inventory-actions .idle-card {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 1rem 1.4rem;
+    gap: 1.2rem;
+    border-radius: 14px;
+  }
+
+  .inventory-actions .idle-card span {
+    text-align: left;
   }
 }

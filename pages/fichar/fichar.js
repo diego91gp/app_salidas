@@ -1,11 +1,11 @@
 const ENV = window.ENV_CONFIG || {};
 const API_BASE = String(ENV.BASE_URL || '').replace(/\/+$/, '');
 const AUTHORIZATION_TOKEN = String(ENV.AUTHORIZATION_TOKEN || '').trim();
-const BIZNEO_BASE = String(ENV.BIZNEO_BASE_URL || '').replace(/\/+$/, '');
-const BIZNEO_TOKEN = String(ENV.BIZNEO_TOKEN || '').trim();
 
 const ENDPOINTS = {
-  getOperator: String(ENV.GET_OPE_ENDPOINT || '/api/API_GET_OPE')
+  getOperator: String(ENV.GET_OPE_ENDPOINT || '/api/API_GET_OPE'),
+  fichaEntrada: String(ENV.FICHA_ENTRADA_ENDPOINT || '/api/API_FICHA_ENTRADA'),
+  fichaSalida: String(ENV.FICHA_SALIDA_ENDPOINT || '/api/API_FICHA_SALIDA')
 };
 
 const screens = {
@@ -19,7 +19,6 @@ const screens = {
 const state = {
   operatorName: '',
   operatorEan: '',
-  timeId: null,
   geoIp: null
 };
 
@@ -38,6 +37,7 @@ const chronoTimeEl = document.getElementById('fichar-chrono-time');
 const chronoSinceEl = document.getElementById('fichar-chrono-since');
 const btnEntrada = document.getElementById('btn-entrada');
 const btnSalida = document.getElementById('btn-salida');
+
 function setScreen(key) {
   Object.values(screens).forEach((s) => s.classList.add('hidden'));
   screens[key].classList.remove('hidden');
@@ -65,7 +65,6 @@ function resetToOperator() {
   clearChronoTimer();
   state.operatorName = '';
   state.operatorEan = '';
-  state.timeId = null;
   inputOperatorEan.value = '';
   setScreen('operator');
   setTimeout(() => inputOperatorEan.focus(), 10);
@@ -123,6 +122,13 @@ function clearChronoTimer() {
 
 async function fetchGeoIp() {
   try {
+    const cached = localStorage.getItem('geoIp');
+    if (cached) {
+      state.geoIp = JSON.parse(cached);
+      console.log('[GEOIP] Desde caché', state.geoIp);
+      return;
+    }
+
     const response = await fetch('https://ipapi.co/json/', {
       headers: { Accept: 'application/json' },
       cache: 'no-store'
@@ -131,7 +137,8 @@ async function fetchGeoIp() {
     const data = await response.json();
     if (data?.latitude && data?.longitude) {
       state.geoIp = { lat: String(data.latitude), long: String(data.longitude) };
-      console.log('[GEOIP]', state.geoIp);
+      localStorage.setItem('geoIp', JSON.stringify(state.geoIp));
+      console.log('[GEOIP] Obtenido y cacheado', state.geoIp);
     }
   } catch (_) {
     console.warn('[GEOIP] No se pudo obtener geolocalización por IP');
@@ -145,7 +152,7 @@ function buildGeoBody(extra = {}) {
 
 // --- API interna ---
 
-async function apiRequestInternal(endpoint, method = 'GET', body, queryParams = {}) {
+async function apiRequest(endpoint, method = 'GET', body, queryParams = {}) {
   const headers = { Accept: 'application/json' };
   if (AUTHORIZATION_TOKEN) {
     headers.Authorization = `Basic ${AUTHORIZATION_TOKEN}`;
@@ -187,57 +194,14 @@ async function apiRequestInternal(endpoint, method = 'GET', body, queryParams = 
   return data;
 }
 
-// --- API Bizneo ---
+// --- Pantalla de acción ---
 
-async function bizneoRequest(method, body, { silentNotFound = false } = {}) {
-  if (!state.timeId) throw new Error('ID DE USUARIO BIZNEO NO DISPONIBLE');
-
-  const url = new URL(`${BIZNEO_BASE}/api/v1/users/${state.timeId}/chrono`);
-  if (BIZNEO_TOKEN) url.searchParams.set('token', BIZNEO_TOKEN);
-
-  const headers = { Accept: 'application/json' };
-  const options = { method, headers };
-
-  if (method !== 'GET' && body && Object.keys(body).length > 0) {
-    headers['Content-Type'] = 'application/json';
-    options.body = JSON.stringify(body);
-  }
-
-  console.log('[BIZNEO REQUEST]', { method, url: url.toString(), body: body ?? null });
-  const response = await fetch(url.toString(), options);
-
-  let data = null;
-  try {
-    data = await response.json();
-  } catch (_) {
-    data = null;
-  }
-
-  console.log('[BIZNEO RESPONSE]', { method, status: response.status, ok: response.ok, data });
-
-  if (!response.ok) {
-    if (silentNotFound && response.status === 404) return null;
-    throw new Error(data?.error || data?.message || `HTTP ${response.status}`);
-  }
-  return data;
-}
-
-// --- Pantalla de acción con estado de fichaje ---
-
-async function showActionScreen() {
+function showActionScreen(startAtIso) {
   clearChronoTimer();
   actionOperatorName.textContent = state.operatorName || 'OPERARIO';
   setScreen('action');
-
-  try {
-    const data = await bizneoRequest('GET', undefined, { silentNotFound: true });
-    const chrono = data?.chrono;
-    // Tiene fichaje activo si tiene start_at y NO tiene end_at
-    if (chrono?.start_at && !chrono?.end_at) {
-      startChronoDisplay(chrono.start_at);
-    }
-  } catch (_) {
-    // Si falla la consulta de estado no bloqueamos la pantalla de acción
+  if (startAtIso) {
+    startChronoDisplay(startAtIso);
   }
 }
 
@@ -251,19 +215,17 @@ formOperatorScan.addEventListener('submit', async (event) => {
   try {
     loadingTitle.textContent = 'VALIDANDO OPERARIO...';
     setScreen('loading');
-    const payload = await apiRequestInternal(ENDPOINTS.getOperator, 'GET', null, { operator_ean: ean });
+    const payload = await apiRequest(ENDPOINTS.getOperator, 'GET', null, { operator_ean: ean, show_time: 1 });
 
     const name = String(payload?.name || '').trim();
     if (!name) throw new Error('OPERARIO NO ENCONTRADO');
 
-    const timeId = payload?.timeId ?? payload?.time_id ?? null;
-    if (!timeId) throw new Error('ID DE BIZNEO NO RECIBIDO');
+    const startAt = String(payload?.start_at || '').trim();
 
     state.operatorName = name;
     state.operatorEan = ean;
-    state.timeId = timeId;
 
-    await showActionScreen();
+    showActionScreen(startAt || null);
   } catch (error) {
     showErrorScreen(error.message || 'OPERARIO NO ENCONTRADO', () => {
       inputOperatorEan.value = '';
@@ -277,10 +239,12 @@ btnEntrada.addEventListener('click', async () => {
   try {
     loadingTitle.textContent = 'REGISTRANDO ENTRADA...';
     setScreen('loading');
-    await bizneoRequest('POST', buildGeoBody());
+    await apiRequest(ENDPOINTS.fichaEntrada, 'POST', buildGeoBody({
+      operator_ean: state.operatorEan
+    }));
     showSuccessScreen('ENTRADA REGISTRADA', resetToOperator);
   } catch (error) {
-    showErrorScreen(error.message || 'ERROR AL REGISTRAR ENTRADA', showActionScreen);
+    showErrorScreen(error.message || 'ERROR AL REGISTRAR ENTRADA', () => showActionScreen(null));
   }
 });
 
@@ -288,13 +252,14 @@ btnSalida.addEventListener('click', async () => {
   try {
     loadingTitle.textContent = 'REGISTRANDO SALIDA...';
     setScreen('loading');
-    await bizneoRequest('PUT', buildGeoBody());
+    await apiRequest(ENDPOINTS.fichaSalida, 'POST', buildGeoBody({
+      operator_ean: state.operatorEan
+    }));
     showSuccessScreen('SALIDA REGISTRADA', resetToOperator);
   } catch (error) {
-    showErrorScreen(error.message || 'ERROR AL REGISTRAR SALIDA', showActionScreen);
+    showErrorScreen(error.message || 'ERROR AL REGISTRAR SALIDA', () => showActionScreen(null));
   }
 });
-
 
 window.addEventListener('keydown', (event) => {
   const onOperator = !screens.operator.classList.contains('hidden');
