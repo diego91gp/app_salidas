@@ -37,6 +37,11 @@ const chronoTimeEl = document.getElementById('fichar-chrono-time');
 const chronoSinceEl = document.getElementById('fichar-chrono-since');
 const btnEntrada = document.getElementById('btn-entrada');
 const btnSalida = document.getElementById('btn-salida');
+const fichaActionsGrid = document.querySelector('.idle-card-grid.fichar-actions');
+const fichaConfirm = document.getElementById('fichar-confirm');
+const fichaConfirmMsg = document.getElementById('fichar-confirm-msg');
+const btnConfirmYes = document.getElementById('btn-confirm-yes');
+const btnConfirmNo = document.getElementById('btn-confirm-no');
 
 function setScreen(key) {
   Object.values(screens).forEach((s) => s.classList.add('hidden'));
@@ -93,6 +98,7 @@ function formatTimeClock(isoString) {
 function tickChrono() {
   const elapsed = Math.max(0, Math.floor((Date.now() - chronoStartAt.getTime()) / 1000));
   chronoTimeEl.textContent = formatElapsed(elapsed);
+  chronoTimeEl.style.color = elapsed >= 8 * 3600 ? 'var(--success)' : 'var(--warn)';
 }
 
 function startChronoDisplay(startAtIso) {
@@ -159,16 +165,16 @@ async function apiRequest(endpoint, method = 'GET', body, queryParams = {}) {
   }
 
   let url = `${API_BASE}${endpoint}`;
-  if (method === 'GET') {
-    const params = new URLSearchParams();
-    Object.entries(queryParams || {}).forEach(([k, v]) => {
-      if (v !== undefined && v !== null && String(v).trim() !== '') {
-        params.set(k, String(v));
-      }
-    });
-    const qs = params.toString();
-    if (qs) url += `?${qs}`;
-  } else {
+  const params = new URLSearchParams();
+  Object.entries(queryParams || {}).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && String(v).trim() !== '') {
+      params.set(k, String(v));
+    }
+  });
+  const qs = params.toString();
+  if (qs) url += `?${qs}`;
+
+  if (method !== 'GET') {
     headers['Content-Type'] = 'application/json';
   }
 
@@ -198,9 +204,16 @@ async function apiRequest(endpoint, method = 'GET', body, queryParams = {}) {
 
 function showActionScreen(startAtIso) {
   clearChronoTimer();
+  setActionButtons(true);
   actionOperatorName.textContent = state.operatorName || 'OPERARIO';
+
+  const hasActive = Boolean(startAtIso);
+  btnEntrada.classList.toggle('hidden', hasActive);
+  btnSalida.classList.toggle('hidden', !hasActive);
+  fichaActionsGrid?.classList.toggle('fichar-actions-single', true);
+
   setScreen('action');
-  if (startAtIso) {
+  if (hasActive) {
     startChronoDisplay(startAtIso);
   }
 }
@@ -235,30 +248,69 @@ formOperatorScan.addEventListener('submit', async (event) => {
   }
 });
 
+function setActionButtons(enabled) {
+  btnEntrada.disabled = !enabled;
+  btnSalida.disabled = !enabled;
+}
+
+function isWeekday() {
+  const day = new Date().getDay();
+  return day >= 1 && day <= 5;
+}
+
+function getElapsedSeconds() {
+  if (!chronoStartAt) return Infinity;
+  return Math.floor((Date.now() - chronoStartAt.getTime()) / 1000);
+}
+
+async function doSalida() {
+  setActionButtons(false);
+  try {
+    loadingTitle.textContent = 'REGISTRANDO SALIDA...';
+    setScreen('loading');
+    await apiRequest(ENDPOINTS.fichaSalida, 'POST', buildGeoBody(), { operator_ean: state.operatorEan });
+    showSuccessScreen('SALIDA REGISTRADA', resetToOperator);
+  } catch (error) {
+    setActionButtons(true);
+    showErrorScreen(error.message || 'ERROR AL REGISTRAR SALIDA', () => showActionScreen(null));
+  }
+}
+
 btnEntrada.addEventListener('click', async () => {
+  if (btnEntrada.disabled) return;
+  setActionButtons(false);
   try {
     loadingTitle.textContent = 'REGISTRANDO ENTRADA...';
     setScreen('loading');
-    await apiRequest(ENDPOINTS.fichaEntrada, 'POST', buildGeoBody({
-      operator_ean: state.operatorEan
-    }));
+    await apiRequest(ENDPOINTS.fichaEntrada, 'POST', buildGeoBody(), { operator_ean: state.operatorEan });
     showSuccessScreen('ENTRADA REGISTRADA', resetToOperator);
   } catch (error) {
+    setActionButtons(true);
     showErrorScreen(error.message || 'ERROR AL REGISTRAR ENTRADA', () => showActionScreen(null));
   }
 });
 
-btnSalida.addEventListener('click', async () => {
-  try {
-    loadingTitle.textContent = 'REGISTRANDO SALIDA...';
-    setScreen('loading');
-    await apiRequest(ENDPOINTS.fichaSalida, 'POST', buildGeoBody({
-      operator_ean: state.operatorEan
-    }));
-    showSuccessScreen('SALIDA REGISTRADA', resetToOperator);
-  } catch (error) {
-    showErrorScreen(error.message || 'ERROR AL REGISTRAR SALIDA', () => showActionScreen(null));
+btnSalida.addEventListener('click', () => {
+  if (btnSalida.disabled) return;
+  const elapsed = getElapsedSeconds();
+  const EIGHT_HOURS = 8 * 3600;
+  if (isWeekday() && elapsed < EIGHT_HOURS) {
+    const h = Math.floor(elapsed / 3600);
+    const m = Math.floor((elapsed % 3600) / 60);
+    fichaConfirmMsg.textContent = `VAS A REGISTRAR ${h}H ${m}MIN. SON MENOS DE 8 HORAS. ¿CONFIRMAR SALIDA?`;
+    fichaConfirm.classList.remove('hidden');
+    return;
   }
+  doSalida();
+});
+
+btnConfirmYes.addEventListener('click', () => {
+  fichaConfirm.classList.add('hidden');
+  doSalida();
+});
+
+btnConfirmNo.addEventListener('click', () => {
+  fichaConfirm.classList.add('hidden');
 });
 
 window.addEventListener('keydown', (event) => {

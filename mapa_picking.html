@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Gestión Almacén</title>
+    <link rel="stylesheet" href="./pages/mapa_picking_tablet/mapa_picking_tablet.css">
+    <script src="../env-config.js"></script>
+    <script src="./pages/mapa_picking_tablet/mapa_picking_tablet.js" defer></script>
+</head>
+<body>
+    <div id="app">
+
+        <header class="t-header">
+            <button id="btnSidebar" class="t-header-btn" aria-label="Artículos">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                    <line x1="3" y1="6"  x2="21" y2="6"/>
+                    <line x1="3" y1="12" x2="21" y2="12"/>
+                    <line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
+            <a href="index.html" class="t-header-logo" aria-label="Menú principal">
+                <img src="./assets/images/siroko_letras.png" alt="SIROKO">
+            </a>
+            <span id="appTitle" hidden></span>
+            <select id="zoneSelect" class="t-zone-select" aria-label="Seleccionar zona">
+                <option value="">Seleccionar zona...</option>
+            </select>
+        </header>
+
+        <div class="t-body">
+
+            <aside id="sidebar" class="t-sidebar" aria-label="Artículos">
+                <div class="t-sidebar-inner">
+
+                    <div class="t-filters">
+                        <select id="collectionSelect" class="t-input" aria-label="Colección">
+                            <option value="">Todas las colecciones</option>
+                        </select>
+                        <div class="t-search-wrap">
+                            <svg class="t-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                            </svg>
+                            <input id="searchInput" type="search" class="t-input t-search-input" placeholder="Buscar artículo..." aria-label="Buscar">
+                        </div>
+                    </div>
+
+                    <div id="itemCount" class="t-item-count"></div>
+                    <div id="itemsList" class="t-items-list" role="list"></div>
+
+                    <div class="t-stats" role="region" aria-label="Estadísticas de zona">
+                        <div class="t-stat">
+                            <strong id="statOccupied">—</strong>
+                            <span>Ocupadas</span>
+                        </div>
+                        <div class="t-stat">
+                            <strong id="statFree">—</strong>
+                            <span>Libres</span>
+                        </div>
+                        <div class="t-stat">
+                            <strong id="statRate">—</strong>
+                            <span>Ocupación</span>
+                        </div>
+                    </div>
+
+                </div>
+            </aside>
+
+            <main id="mapArea" class="t-map-area">
+                <div id="warehouseMap" class="t-warehouse-map">
+                    <div class="t-placeholder">Selecciona una zona para ver el mapa</div>
+                </div>
+            </main>
+
+        </div>
+    </div>
+
+    <!-- Overlay (portrait sidebar) -->
+    <div id="sidebarOverlay" class="t-overlay" hidden></div>
+
+    <!-- Panel de posición -->
+    <div id="positionPanel" class="t-panel" role="dialog" aria-modal="true" aria-labelledby="panelTitle" hidden>
+        <div class="t-panel-card">
+            <div class="t-panel-header">
+                <h2 id="panelTitle" class="t-panel-title">Posición</h2>
+                <button id="btnPanelClose" class="t-close-btn" aria-label="Cerrar panel">✕</button>
+            </div>
+            <div id="panelBody" class="t-panel-body"></div>
+        </div>
+    </div>
+
+    <!-- Modal de stock -->
+    <div id="stockModal" class="t-modal" role="dialog" aria-modal="true" aria-labelledby="stockTitle" hidden>
+        <div class="t-modal-card">
+            <button id="btnStockClose" class="t-close-btn t-modal-close" aria-label="Cerrar">✕</button>
+            <div id="stockImg" class="t-stock-img"></div>
+            <div class="t-modal-body">
+                <h3 id="stockTitle" class="t-modal-title"></h3>
+                <div id="stockContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="t-toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+</body>
+</html>

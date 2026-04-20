@@ -47,7 +47,7 @@ body {
 /* ── Grid de tarjetas ── */
 .menu-shell {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: clamp(1rem, 2.5vw, 1.8rem);
   width: min(940px, 90vw);
   padding: var(--menu-pad-block) 0 calc(1.5rem + env(safe-area-inset-bottom));

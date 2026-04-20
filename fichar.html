@@ -36,11 +36,26 @@
           <div class="fichar-chrono-time" id="fichar-chrono-time">00:00:00</div>
           <p class="fichar-chrono-since" id="fichar-chrono-since">EN CURSO DESDE --:--</p>
         </div>
-        <div class="cta-row fichar-actions">
-          <button class="btn btn-success btn-main-action" id="btn-entrada" type="button">ENTRADA</button>
-          <button class="btn btn-danger btn-main-action" id="btn-salida" type="button">SALIDA</button>
+        <div class="idle-card-grid fichar-actions">
+          <button class="idle-card" id="btn-entrada" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="2" x2="14" y2="2"/><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 14.5 14.5"/></svg>
+            <span>FICHAR ENTRADA</span>
+          </button>
+          <button class="idle-card" id="btn-salida" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="2" x2="14" y2="2"/><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 14.5 14.5"/></svg>
+            <span>FICHAR SALIDA</span>
+          </button>
         </div>
+        <a class="btn btn-ghost fichar-back" href="./index.html">VOLVER AL MENÚ PRINCIPAL</a>
       </section>
+
+      <div class="fichar-confirm hidden" id="fichar-confirm">
+        <p class="fichar-confirm-msg" id="fichar-confirm-msg"></p>
+        <div class="cta-row fichar-actions">
+          <button class="btn btn-warn" id="btn-confirm-yes" type="button">CONFIRMAR</button>
+          <button class="btn btn-ghost" id="btn-confirm-no" type="button">CANCELAR</button>
+        </div>
+      </div>
 
       <section class="panel panel-loading hidden" id="screen-loading">
         <div class="loading-spinner" aria-hidden="true"></div>
