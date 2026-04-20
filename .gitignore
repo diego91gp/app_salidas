@@ -5,7 +5,7 @@ android/local.properties
 android/keystore.properties
 android/.idea/
 android/**/*.iml
-android/**/*.apk
+android/**/build/**/*.apk
 
 # General
 .DS_Store
