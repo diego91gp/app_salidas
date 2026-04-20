@@ -1,162 +1,280 @@
-# APP SALIDAS / SIROKO WAREHOUSE (WEB TABLET)
+# Siroko Warehouse — Tablet Apps
 
-Aplicacion web interna para tablet (uso principal en formato apaisado), dividida en modulos y consumiendo APIs de backend Velneo a traves de Apache.
+Internal web + Android application suite for warehouse operations at Siroko.
+Designed for landscape tablet use with barcode scanner input.
 
-## 1. Estructura del proyecto
+> **Español / English** — documentación bilingüe abajo.
 
-- `index.html`
-  - Menu principal de modulos.
-  - Carga:
-    - `pages/menu/menu.css`
-    - `pages/menu/menu.js`
+---
 
-- `sacar-listados.html`
-  - Modulo de gestion de listados de picking.
-  - Carga:
-    - `styles.css`
-    - `app.js`
+## Table of Contents
 
-- `inventario-gavetas.html`
-  - Modulo de inventario de gavetas.
-  - Carga:
-    - `styles.css` (estilo base global)
-    - `pages/inventario-gavetas/inventario-gavetas.css`
-    - `pages/inventario-gavetas/inventario-gavetas.js`
+- [Project Structure](#project-structure)
+- [Environment Setup](#environment-setup)
+- [Modules](#modules)
+- [Android App](#android-app)
+- [Local Development](#local-development)
+- [Estructura del proyecto](#estructura-del-proyecto-es)
+- [Configuración del entorno](#configuración-del-entorno-es)
+- [Módulos](#módulos-es)
+- [App Android](#app-android-es)
+- [Desarrollo local](#desarrollo-local-es)
 
-- `fichar.html`
-  - Placeholder/entrada futura para modulo de fichaje.
+---
 
-- `assets/images/`
-  - Logos e imagenes de apoyo visual (operario, ean gaveta, etc.).
+## Project Structure
 
-- `mock-images/`
-  - Imagenes fallback para renders de items.
+```
+apps_tablet/
+├── android/                        # Android APK (warehouse WebView wrapper)
+│   ├── app/src/main/
+│   │   └── java/com/siroko/listados/MainActivity.kt
+│   └── keystore/                   # Release signing keystore
+├── assets/images/                  # Shared images and logos
+├── mock-images/                    # Fallback SVG images for article renders
+├── pages/
+│   ├── clock-in/                   # Clock-in module (CSS + JS)
+│   ├── drawer-inventory/           # Drawer inventory module (CSS + JS)
+│   ├── menu/                       # Main menu (CSS + JS)
+│   └── picking-map/                # Picking map module (CSS + JS)
+├── index.html                      # Main menu
+├── clock-in.html                   # Clock-in module
+├── drawer-inventory.html           # Drawer inventory module
+├── export-lists.html               # Picking list export module
+├── picking-map.html                # Warehouse picking map
+├── box-scan.html                   # Box label scanning (standalone)
+├── app.js                          # Shared API client for export-lists
+└── styles.css                      # Global base styles
+```
 
-## 2. Configuracion de entorno
+---
 
-La web carga configuracion global desde:
+## Environment Setup
 
-- `../env-config.js`
+The web apps load runtime configuration from **`../env-config.js`**
+(one level above the project root — not committed to the repo).
 
-Campos usados en runtime:
+Create the file at that path with the following structure:
 
-- `BASE_URL`
-- `AUTHORIZATION_TOKEN`
+```js
+// env-config.js
+window.ENV_CONFIG = {
+    BASE_URL:            "https://velneo.siroko.com",   // Velneo backend URL
+    AUTHORIZATION_TOKEN: "BASE64_BASIC_AUTH_TOKEN",     // Base64 of user:password
+    API_KEY:             "YOUR-API-KEY-UUID",           // Velneo SQL API key
+};
+```
 
-Campos opcionales para sobreescribir endpoints (inventario):
+| Field | Description |
+|-------|-------------|
+| `BASE_URL` | Velneo server base URL. Use `https://velneo.siroko.com` for production or `https://c5.velneo.com:21272` for staging. |
+| `AUTHORIZATION_TOKEN` | Base64-encoded `user:password` for HTTP Basic Auth. Generate with `btoa("user:password")` in the browser console. |
+| `API_KEY` | UUID key registered in the `API_KEYS` table of Velneo. Required by `api_queries` and `api_box_scan` endpoints. |
 
-- `PICKING_INV_ENDPOINT`
-- `CREATE_PICKING_INV_ENDPOINT`
-- `PICKING_INV_LINES_ENDPOINT`
-- `GET_VAR_BY_EAN_ENDPOINT`
-- `CREATE_PICKING_INV_LINE_ENDPOINT`
-- `GET_OPE_ENDPOINT`
+> The file is intentionally outside the repo to avoid committing credentials.
+> The Android app uses its own credential screen and does not read `env-config.js`.
 
-Si no se informan, se usan defaults `/api/...` definidos en JS.
+---
 
-## 3. Endpoints actuales
+## Modules
 
-Base efectiva: `${BASE_URL}` + endpoint.
+### `index.html` — Main Menu
+Entry point. Links to all modules.
 
-### 3.1 Modulo Sacar Listados (`app.js`)
+### `export-lists.html` — Export Picking Lists
+- Scan operator EAN → validate via `GET /api/API_GET_OPE`
+- Scan list EAN → assign via `POST /api/API_ASSIGN_SAL_LIST`
+- Finish list → `GET /api/API_GET_LIST` → `POST /api/API_FIN_LIST`
 
-- `GET /api/API_GET_OPE`
-  - Query: `operator_ean`
-  - Uso: validar operario.
+### `drawer-inventory.html` — Drawer Inventory
+- Load or create open inventories
+- Scan operator EAN before counting
+- Scan drawer EAN → `GET /api/API_GET_VAR_BY_EAN`
+- Submit count line → `POST /api/API_CREATE_PICKING_INV_LINE`
 
-- `POST /api/API_ASSIGN_SAL_LIST`
-  - Body:
-    - `operator_ean`
-    - `list_ean`
-  - Uso: asignar listado a operario.
+### `clock-in.html` — Clock In/Out
+- Operator clock-in and clock-out module.
 
-- `GET /api/API_GET_LIST`
-  - Query: `list_ean`
-  - Uso: obtener lineas para flujo de finalizacion.
+### `picking-map.html` — Picking Map
+- Visual map of warehouse zones and pallet/box positions.
 
-- `POST /api/API_FIN_LIST`
-  - Body:
-    - `ean_listado`
-    - `ok`
-    - `items` (segun haya pendientes o no)
-  - Uso: cierre de listado.
+### `box-scan.html` — Box Label Scanning
+Standalone single-file app. No external JS dependencies.
+- Scan box CODE128 → `GET /api/api_box_scan?code=...&apikey=...`
+- Returns article photo (CDN), name, size and units in one request.
+- Editable units per row. Transfer button (pending implementation).
 
-### 3.2 Modulo Inventario Gavetas (`pages/inventario-gavetas/inventario-gavetas.js`)
+---
 
-- `GET /api/API_GET_PICKING_INV`
-  - Uso: cargar inventarios abiertos.
+## Android App
 
-- `POST /api/API_CREATE_PICKING_INV`
-  - Uso: crear inventario abierto si no existe.
+Located in `android/`. A signed WebView wrapper that loads `https://velneo.siroko.com/alm_app`.
 
-- `GET /api/API_GET_PICKING_INV_LINES`
-  - Query: `INV_ID`
-  - Uso: cargar lineas del inventario.
+**Build signed APK:**
+```bash
+cd android
+./gradlew assembleRelease
+# Output: app/build/outputs/apk/release/app-release.apk
+```
 
-- `GET /api/API_GET_OPE`
-  - Query: `operator_ean`
-  - Uso: validar operario antes de contar.
+**Key behaviour:**
+- Images are intercepted and cached to disk permanently (`cacheDir/img_cache/`).
+- Requests go directly to `cdn.siroko.com` (CDN77, 1-year cache headers).
+- WebView cache is disabled for HTML/JS/CSS (`LOAD_NO_CACHE`).
+- Image cache is cleared only when credentials change.
+- Credentials are stored in `SharedPreferences` and re-used across sessions.
 
-- `GET /api/API_GET_VAR_BY_EAN`
-  - Query: `VAR_EAN`
-  - Uso: obtener datos articulo/gaveta tras escaneo.
+---
 
-- `POST /api/API_CREATE_PICKING_INV_LINE`
-  - Body actual enviado:
-    - `var_ean`
-    - `inv_id`
-    - `operator_ean`
-    - `uds`
-    - `uds_max`
-    - `uds_aviso`
-  - Uso: alta/modificacion de linea de recuento.
+## Local Development
 
-## 4. Flujo funcional
+Serve with any static server from the `apps_tablet/` root:
 
-### 4.1 Menu principal
+```bash
+# Python
+python3 -m http.server 8080
 
-Opciones:
+# Node (npx)
+npx serve .
+```
 
-- `SACAR LISTADOS`
-- `FICHAR` (actualmente deshabilitado)
-- `INVENTARIO DE GAVETAS`
+Then place `env-config.js` one level up:
+```
+codex/
+├── env-config.js     ← here
+└── apps_tablet/
+    └── index.html
+```
 
-### 4.2 Sacar listados
+Open `http://localhost:8080` in a tablet-sized browser window (landscape).
+Hard-reload (`Ctrl+Shift+R`) if cached assets appear stale.
 
-- Escanear operario (`API_GET_OPE`).
-- Escanear listado.
-- Asignar (`API_ASSIGN_SAL_LIST`) o finalizar (`API_GET_LIST` -> `API_FIN_LIST`) segun modo.
-- Flujo de pendientes con teclado tactil y seleccion de incidencias.
+---
+---
 
-### 4.3 Inventario de gavetas
+## Estructura del proyecto (ES)
 
-- Cargar inventarios abiertos.
-- Crear nuevo inventario o abrir uno existente.
-- Boton `CONTAR` exige escaneo previo de operario (`API_GET_OPE`).
-- Escaneo EAN gaveta (`API_GET_VAR_BY_EAN`).
-- Pantalla de recuento:
-  - unidades contadas
-  - desplegable para uds maximas / minimas aviso
-  - validaciones de campos obligatorios
-- Enviar linea (`API_CREATE_PICKING_INV_LINE`) y recargar lineas (`API_GET_PICKING_INV_LINES`).
+```
+apps_tablet/
+├── android/                        # App Android (wrapper WebView para almacén)
+│   ├── app/src/main/
+│   │   └── java/com/siroko/listados/MainActivity.kt
+│   └── keystore/                   # Keystore de firma release
+├── assets/images/                  # Imágenes y logos compartidos
+├── mock-images/                    # SVGs de fallback para renders de artículos
+├── pages/
+│   ├── clock-in/                   # Módulo de fichaje (CSS + JS)
+│   ├── drawer-inventory/           # Módulo de inventario de gavetas (CSS + JS)
+│   ├── menu/                       # Menú principal (CSS + JS)
+│   └── picking-map/                # Módulo mapa picking (CSS + JS)
+├── index.html                      # Menú principal
+├── clock-in.html                   # Módulo de fichaje
+├── drawer-inventory.html           # Módulo de inventario de gavetas
+├── export-lists.html               # Módulo de sacar listados de picking
+├── picking-map.html                # Mapa visual del almacén
+├── box-scan.html                   # Escaneo de etiquetas de caja (standalone)
+├── app.js                          # Cliente API compartido para export-lists
+└── styles.css                      # Estilos base globales
+```
 
-Nota: el operario validado se mantiene durante el flujo del modulo y se limpia al volver al menu principal.
+---
 
-## 5. Desarrollo local
+## Configuración del entorno (ES)
 
-Opciones habituales:
+Las apps web cargan la configuración desde **`../env-config.js`**
+(un nivel por encima de la raíz del proyecto — no se sube al repo).
 
-- Live Server (VSCode)
-- Servidor estatico simple
+Crea el archivo con esta estructura:
 
-Si el navegador muestra version antigua, forzar recarga dura (`Ctrl+Shift+R`) o desactivar cache en DevTools.
+```js
+// env-config.js
+window.ENV_CONFIG = {
+    BASE_URL:            "https://velneo.siroko.com",   // URL del backend Velneo
+    AUTHORIZATION_TOKEN: "BASE64_USUARIO_CONTRASEÑA",   // Base64 de usuario:contraseña
+    API_KEY:             "UUID-DE-LA-API-KEY",          // API key registrada en Velneo
+};
+```
 
-## 6. Criterios de UI actuales
+| Campo | Descripción |
+|-------|-------------|
+| `BASE_URL` | URL base del servidor Velneo. Producción: `https://velneo.siroko.com`. Staging: `https://c5.velneo.com:21272`. |
+| `AUTHORIZATION_TOKEN` | `usuario:contraseña` codificado en Base64 para HTTP Basic Auth. Generar con `btoa("usuario:contraseña")` en la consola del navegador. |
+| `API_KEY` | UUID registrado en la tabla `API_KEYS` de Velneo. Necesario para los endpoints `api_queries` y `api_box_scan`. |
 
-- Orientado a tablet y lector de codigo de barras.
-- Inputs en `readonly` para evitar teclado virtual y priorizar escaner.
-- Navegacion por pantallas tipo kiosk con feedback visual de:
-  - carga
-  - ok
-  - error
-- Estetica dark, textos en mayusculas y controles grandes para uso tactil.
+> El archivo está fuera del repo intencionalmente para no subir credenciales.
+> La app Android usa su propia pantalla de credenciales y no lee `env-config.js`.
+
+---
+
+## Módulos (ES)
+
+### `index.html` — Menú principal
+Punto de entrada. Acceso a todos los módulos.
+
+### `export-lists.html` — Sacar listados de picking
+- Escanear EAN operario → validar con `GET /api/API_GET_OPE`
+- Escanear EAN listado → asignar con `POST /api/API_ASSIGN_SAL_LIST`
+- Cerrar listado → `GET /api/API_GET_LIST` → `POST /api/API_FIN_LIST`
+
+### `drawer-inventory.html` — Inventario de gavetas
+- Cargar o crear inventarios abiertos
+- Escanear EAN operario antes de contar
+- Escanear EAN gaveta → `GET /api/API_GET_VAR_BY_EAN`
+- Enviar línea de recuento → `POST /api/API_CREATE_PICKING_INV_LINE`
+
+### `clock-in.html` — Fichaje
+- Módulo de entrada y salida de operarios.
+
+### `picking-map.html` — Mapa de picking
+- Mapa visual de zonas del almacén con posiciones de palés y cajas.
+
+### `box-scan.html` — Escaneo de etiquetas de caja
+App standalone en un solo archivo HTML sin dependencias externas.
+- Escanear CODE128 de caja → `GET /api/api_box_scan?code=...&apikey=...`
+- Devuelve foto (CDN), nombre artículo, talla y unidades en una sola petición.
+- Unidades editables por fila. Botón de traspaso pendiente de implementar.
+
+---
+
+## App Android (ES)
+
+Ubicada en `android/`. Wrapper WebView firmado que carga `https://velneo.siroko.com/alm_app`.
+
+**Compilar APK firmado:**
+```bash
+cd android
+./gradlew assembleRelease
+# Resultado: app/build/outputs/apk/release/app-release.apk
+```
+
+**Comportamiento clave:**
+- Las imágenes se interceptan y cachean en disco de forma permanente (`cacheDir/img_cache/`).
+- Las peticiones van directamente a `cdn.siroko.com` (CDN77, cabeceras de caché de 1 año).
+- La caché del WebView está desactivada para HTML/JS/CSS (`LOAD_NO_CACHE`).
+- La caché de imágenes solo se limpia al cambiar las credenciales.
+- Las credenciales se guardan en `SharedPreferences` y se reutilizan entre sesiones.
+
+---
+
+## Desarrollo local (ES)
+
+Lanzar con cualquier servidor estático desde la raíz de `apps_tablet/`:
+
+```bash
+# Python
+python3 -m http.server 8080
+
+# Node (npx)
+npx serve .
+```
+
+Colocar `env-config.js` un nivel por encima:
+```
+codex/
+├── env-config.js     ← aquí
+└── apps_tablet/
+    └── index.html
+```
+
+Abrir `http://localhost:8080` en una ventana de navegador con tamaño de tablet (apaisado).
+Si los assets se ven desactualizados, forzar recarga dura con `Ctrl+Shift+R`.
