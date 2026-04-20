@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Escaneo Cajas</title>
+<script src="../env-config.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -258,9 +259,11 @@
 </footer>
 
 <script>
-const API_BASE = 'https://c5.velneo.com:21272';
-const API_KEY  = '85894769-0218-43f8-b388-029eb763ca54';
-const AUTH     = 'Basic c2lyb2tvOnYzbE4zMCEyMDIzIw==';
+const API_BASE = String(window.ENV_CONFIG?.BASE_URL || '').replace(/\/+$/, '');
+const API_KEY  = String(window.ENV_CONFIG?.API_KEY || '');
+const AUTH     = window.ENV_CONFIG?.AUTHORIZATION_TOKEN
+    ? `Basic ${window.ENV_CONFIG.AUTHORIZATION_TOKEN}`
+    : '';
 
 const $input    = document.getElementById('scan-input');
 const $tbody    = document.getElementById('tbody');

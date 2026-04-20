@@ -1,6 +1,13 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+}
+
+val keystoreProps = Properties().also { props ->
+    val f = rootProject.file("keystore.properties")
+    if (f.exists()) props.load(f.inputStream())
 }
 
 android {
@@ -17,10 +24,10 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("../keystore/siroko_almacen_release.jks")
-            storePassword = "Siroko2025!"
-            keyAlias = "siroko_almacen"
-            keyPassword = "Siroko2025!"
+            storeFile = file(keystoreProps["storeFile"] as String)
+            storePassword = keystoreProps["storePassword"] as String
+            keyAlias = keystoreProps["keyAlias"] as String
+            keyPassword = keystoreProps["keyPassword"] as String
         }
     }
 
