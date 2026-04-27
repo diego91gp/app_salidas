@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>GESTIÓN ALMACÉN</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./pages/almacen/almacen.css" />
+  </head>
+  <body>
+    <a href="./index.html">
+      <img class="global-top-logo" src="assets/images/siroko_warehouse.png" alt="SIROKO" />
+    </a>
+
+    <button class="btn btn-ghost btn-home-float hidden" id="btn-back-float" type="button" aria-label="Volver">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+
+    <div class="operator-badge hidden" id="operator-badge">
+      <span>👤</span>
+      <span id="operator-badge-name"></span>
+    </div>
+
+    <main class="app-shell">
+
+      <!-- ── Scan operario ── -->
+      <section class="panel" id="screen-operator">
+        <h1 class="idle-title">GESTIÓN ALMACÉN</h1>
+        <img class="ope-image" src="assets/images/operator_example.png" alt="OPERARIO" />
+        <h2>ESCANEAR ID OPERARIO</h2>
+        <form id="form-operator-scan" class="scan-form">
+          <input
+            id="input-operator-ean"
+            type="text"
+            inputmode="none"
+            autocomplete="off"
+            placeholder="EAN OPERARIO"
+            readonly
+            required
+          />
+        </form>
+      </section>
+
+      <!-- ── Menú almacén ── -->
+      <section class="panel hidden" id="screen-menu">
+        <p class="almacen-subtitle">MENÚ GESTIÓN ALMACÉN</p>
+        <nav class="almacen-nav">
+
+          <!-- Deshabilitado: no implementado -->
+          <button class="almacen-btn" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+            </svg>
+            <span>RECEPCIÓN MERCANCÍA</span>
+          </button>
+
+          <button class="almacen-btn" id="btn-inventarios">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+            <span>INVENTARIOS</span>
+          </button>
+
+          <a class="almacen-btn almacen-btn--disabled" aria-disabled="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 8h14M5 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm14 0a2 2 0 1 1 4 0 2 2 0 0 1-4 0zM3 8l2 12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2L21 8M10 12l2 2 2-2"/>
+            </svg>
+            <span>MOVER CAJAS</span>
+          </a>
+
+          <a class="almacen-btn almacen-btn--disabled" aria-disabled="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2"/>
+              <path d="M8 21h8M12 17v4"/>
+              <line x1="2" y1="9" x2="22" y2="9"/>
+              <rect x="6" y="12" width="3" height="2" rx="0.5"/>
+              <rect x="11" y="12" width="3" height="2" rx="0.5"/>
+              <rect x="16" y="12" width="2" height="2" rx="0.5"/>
+            </svg>
+            <span>PLANO ALMACENES</span>
+          </a>
+
+          <!-- Deshabilitado: no implementado -->
+          <button class="almacen-btn" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9h2m4 0h2m4 0h2M3 15h2m4 0h2m4 0h2M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/>
+            </svg>
+            <span>LEER CÓDIGOS</span>
+          </button>
+
+          <button class="almacen-btn" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="14" width="20" height="5" rx="1"/>
+              <rect x="4" y="9" width="16" height="5" rx="1"/>
+              <rect x="6" y="4" width="12" height="5" rx="1"/>
+            </svg>
+            <span>MENÚ PALLETS</span>
+          </button>
+
+        </nav>
+      </section>
+
+      <!-- ── Lista inventarios ── -->
+      <section class="panel hidden" id="screen-inventories">
+        <p class="almacen-subtitle">INVENTARIOS ABIERTOS</p>
+        <div id="inventories-list" class="inv-list"></div>
+        <button class="btn btn-ghost" id="btn-back-from-inventories">← VOLVER AL MENÚ</button>
+      </section>
+
+      <!-- ── Zonas del inventario ── -->
+      <section class="panel hidden" id="screen-zones">
+        <p class="almacen-subtitle" id="zones-inv-name">ZONAS</p>
+        <div id="zones-list" class="inv-list"></div>
+        <button class="btn btn-ghost" id="btn-back-from-zones">← VOLVER A INVENTARIOS</button>
+      </section>
+
+      <!-- ── Stock contado por zona ── -->
+      <section class="panel hidden" id="screen-zone-stock">
+        <p class="almacen-subtitle" id="zone-stock-inv-name">INVENTARIO</p>
+        <h2 id="zone-stock-title">ZONA</h2>
+        <div id="zone-stock-list" class="zone-stock-list"></div>
+        <button class="btn-scan-action" id="btn-escanear-pallet">ESCANEAR</button>
+        <button class="btn btn-ghost" id="btn-back-from-zone-stock">← VOLVER A ZONAS</button>
+      </section>
+
+      <!-- ── Scan pallet ── -->
+      <section class="panel hidden" id="screen-scan-pallet">
+        <img class="scan-img" src="assets/images/pal_example.png" alt="" />
+        <p class="scan-instruction">ESCANEA EL CÓDIGO DEL PALLET</p>
+        <div class="scan-field-wrap">
+          <input id="input-pallet-ean" type="text" class="scan-input" inputmode="none" autocomplete="off" placeholder="COD. PALLET" readonly />
+        </div>
+      </section>
+
+      <!-- ── Asignar PO al pallet ── -->
+      <section class="panel hidden" id="screen-assign-po">
+        <p class="almacen-subtitle">ASIGNAR PO A LAS CAJAS A ESCANEAR</p>
+        <p class="scan-pallet-chip" id="po-pallet-badge"></p>
+        <input
+          id="input-po-search"
+          type="text"
+          inputmode="none"
+          autocomplete="off"
+          placeholder="BUSCAR PO..."
+          readonly
+          class="po-search-input"
+        />
+        <div id="po-list" class="po-list"></div>
+        <div class="numpad">
+          <button class="numpad-key" data-key="1">1</button>
+          <button class="numpad-key" data-key="2">2</button>
+          <button class="numpad-key" data-key="3">3</button>
+          <button class="numpad-key" data-key="4">4</button>
+          <button class="numpad-key" data-key="5">5</button>
+          <button class="numpad-key" data-key="6">6</button>
+          <button class="numpad-key" data-key="7">7</button>
+          <button class="numpad-key" data-key="8">8</button>
+          <button class="numpad-key" data-key="9">9</button>
+          <button class="numpad-key numpad-key--clear" data-key="clear">C</button>
+          <button class="numpad-key" data-key="0">0</button>
+          <button class="numpad-key numpad-key--del" data-key="del">⌫</button>
+        </div>
+        <button class="btn-scan-action" id="btn-confirm-po" disabled>CONFIRMAR PO</button>
+        <button class="btn btn-ghost" id="btn-switch-to-fecha">INTRODUCIR FECHA APROX MANUAL</button>
+      </section>
+
+      <!-- ── Fecha llegada aproximada ── -->
+      <section class="panel hidden" id="screen-fecha-aprox">
+        <p class="almacen-subtitle">FECHA DE LLEGADA APROXIMADA</p>
+        <p class="scan-pallet-chip" id="fecha-pallet-badge"></p>
+        <div id="cal-wrap" class="cal-wrap"></div>
+        <p class="fecha-selected-display hidden" id="fecha-selected-display"></p>
+        <button class="btn-scan-action" id="btn-confirm-fecha" disabled>CONFIRMAR FECHA</button>
+        <button class="btn btn-ghost" id="btn-back-to-po">← BUSCAR PO</button>
+      </section>
+
+      <!-- ── Scan altura ── -->
+      <section class="panel hidden" id="screen-scan-altura">
+        <p class="scan-pallet-chip" id="altura-pallet-badge"></p>
+        <p class="almacen-subtitle">ALTURA DE ESTANTERÍA</p>
+        <img class="scan-img" src="assets/images/example_alt.png" alt="" />
+        <p class="scan-instruction">ESCANEA LA ALTURA DE ESTANTERÍA</p>
+        <div class="scan-field-wrap">
+          <input id="input-altura-ean" type="text" class="scan-input" inputmode="none" autocomplete="off" placeholder="COD. EST." readonly />
+        </div>
+      </section>
+
+      <!-- ── Seleccionar posición ── -->
+      <section class="panel hidden" id="screen-select-pos">
+        <p class="almacen-subtitle">SELECCIONAR POSICIÓN</p>
+        <p class="scan-pallet-chip" id="pos-context-text"></p>
+        <p class="scan-location-text" id="pos-location-badge"></p>
+        <div class="pos-table-wrap">
+          <table class="pos-table">
+            <thead id="pos-table-head"><tr><th>POSICIÓN</th><th>ESTADO</th></tr></thead>
+            <tbody id="pos-table-body"></tbody>
+          </table>
+        </div>
+        <button class="btn-scan-action" id="btn-asignar-pallet" disabled>ASIGNAR PALLET</button>
+      </section>
+
+      <!-- ── Resumen pallet ── -->
+      <section class="panel hidden" id="screen-pallet-summary">
+        <p class="almacen-subtitle" id="summary-pallet-title">PALLET: —</p>
+        <p class="scan-location-text" id="summary-location"></p>
+        <div class="summary-boxes-wrap">
+          <table class="pos-table">
+            <thead><tr><th></th><th>ARTÍCULO</th><th>TALLA</th><th>COD. CAJA</th></tr></thead>
+            <tbody id="summary-boxes-body"></tbody>
+          </table>
+        </div>
+        <p class="stock-empty hidden" id="summary-empty-msg">PALLET VACÍO</p>
+        <button class="btn-scan-action" id="btn-add-box">AÑADIR CAJA</button>
+      </section>
+
+      <!-- ── Confirmación ── -->
+      <section class="panel hidden" id="screen-confirm">
+        <p class="confirm-title" id="confirm-title"></p>
+        <p class="confirm-msg" id="confirm-msg"></p>
+        <div class="confirm-actions">
+          <button class="btn-scan-action" id="btn-confirm-yes">SÍ, EDITAR</button>
+          <button class="btn btn-ghost" id="btn-confirm-no">NO, VOLVER</button>
+        </div>
+      </section>
+
+      <!-- ── Scan caja ── -->
+      <section class="panel hidden" id="screen-scan-box">
+        <p class="almacen-subtitle">ESCANEAR CAJA</p>
+        <p class="scan-context-text" id="box-context-text"></p>
+        <img class="scan-img" src="assets/images/box_example.png" alt="" />
+        <p class="scan-instruction">ESCANEA EL CÓDIGO DE BARRAS DE LA CAJA</p>
+        <div class="scan-field-wrap">
+          <input id="input-box-code" type="text" class="scan-input" inputmode="none" autocomplete="off" placeholder="COD. CAJA" readonly />
+        </div>
+        <button class="btn btn-ghost scan-secondary-btn" id="btn-resumen-pallet">← VOLVER A RESUMEN DE PALLET</button>
+      </section>
+
+      <!-- ── Scan artículo ── -->
+      <section class="panel hidden" id="screen-scan-article">
+        <p class="almacen-subtitle">ESCANEAR ARTÍCULO</p>
+        <p class="scan-context-text" id="article-context-text"></p>
+        <img class="scan-img" src="assets/images/ean_example.png" alt="" />
+        <p class="scan-instruction">ESCANEA EL EAN DEL ARTÍCULO</p>
+        <div class="scan-field-wrap">
+          <input id="input-article-ean" type="text" class="scan-input" inputmode="none" autocomplete="off" placeholder="EAN ART." readonly />
+        </div>
+      </section>
+
+      <!-- ── Unidades ── -->
+      <section class="panel hidden" id="screen-units">
+        <div class="units-article-info">
+          <p class="units-art-name" id="units-art-name">—</p>
+          <p class="units-var-name" id="units-var-name"></p>
+        </div>
+        <img class="units-art-img hidden" id="units-art-img" src="" alt="" />
+        <div class="units-display">
+          <span class="units-label">UDS</span>
+          <span class="units-value" id="units-value">0</span>
+        </div>
+        <div class="numpad">
+          <button class="numpad-key" data-key="1">1</button>
+          <button class="numpad-key" data-key="2">2</button>
+          <button class="numpad-key" data-key="3">3</button>
+          <button class="numpad-key" data-key="4">4</button>
+          <button class="numpad-key" data-key="5">5</button>
+          <button class="numpad-key" data-key="6">6</button>
+          <button class="numpad-key" data-key="7">7</button>
+          <button class="numpad-key" data-key="8">8</button>
+          <button class="numpad-key" data-key="9">9</button>
+          <button class="numpad-key numpad-key--clear" data-key="clear">C</button>
+          <button class="numpad-key" data-key="0">0</button>
+          <button class="numpad-key numpad-key--del" data-key="del">⌫</button>
+        </div>
+        <button class="btn-scan-action btn-scan-action--confirm" id="btn-confirm-units">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          CONFIRMAR
+        </button>
+      </section>
+
+      <!-- ── Loading ── -->
+      <section class="panel panel-loading hidden" id="screen-loading">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <h2 id="loading-title">CARGANDO...</h2>
+      </section>
+
+      <!-- ── Error ── -->
+      <section class="panel panel-error hidden" id="screen-error">
+        <div class="x-wrap" aria-hidden="true">
+          <svg class="x-svg" viewBox="0 0 72 72">
+            <circle class="x-circle" cx="36" cy="36" r="30"></circle>
+            <path class="x-mark" d="M24 24l24 24"></path>
+            <path class="x-mark x-mark-second" d="M48 24L24 48"></path>
+          </svg>
+        </div>
+        <h2>ERROR</h2>
+        <p id="error-text"></p>
+      </section>
+
+    </main>
+
+    <script src="../env-config.js"></script>
+    <script src="./utils.js"></script>
+    <script src="./pages/almacen/almacen.js"></script>
+  </body>
+</html>
