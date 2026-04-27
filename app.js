@@ -219,7 +219,8 @@ function groupItemsByEan(items) {
         ean,
         articulo: rawItem?.articulo ?? '',
         uds: qty,
-        url: rawItem?.url ?? ''
+        url: rawItem?.url ?? '',
+        orden: rawItem?.orden ?? null
       });
       return;
     }
@@ -352,6 +353,7 @@ function generateMockFinishItems(count = 120) {
       ean: `843700${String(i).padStart(6, '0')}`,
       articulo: `${family} industrial ${size} - lote ${padded}`,
       uds: (i % 9) + 1,
+      orden: i,
       url: `mock-images/item-${String(((i - 1) % 12) + 1).padStart(2, '0')}.svg`
     });
   }
@@ -582,9 +584,9 @@ function openPartialFromFinishItems() {
   state.partialItems = state.finishItems.map((item) => {
     const qty = Number(item.uds);
     const normalizedQty = Number.isFinite(qty) && qty > 0 ? Math.round(qty) : 1;
-    runningLineNumber += normalizedQty;
+    const lineNumber = Number(item.orden) > 0 ? Number(item.orden) : (runningLineNumber += normalizedQty);
     return {
-      lineNumber: runningLineNumber,
+      lineNumber,
       ean: item.ean,
       articulo: item.articulo,
       url: item.url,
@@ -613,9 +615,10 @@ btnFinish.addEventListener('click', async () => {
 formListScan.addEventListener('submit', async (event) => {
   event.preventDefault();
   const ean = inputListEan.value.trim();
+  lockScan();
 
   if (!ean) {
-    showCenterModal('¿TIENE ALGUN PENDIENTE DE PICKING?', 1800);
+    showCenterModal('INTRODUZCA NUMERO LISTADO', 1800);
     return;
   }
 
@@ -627,7 +630,12 @@ formListScan.addEventListener('submit', async (event) => {
       const finishResponse = await apiRequest(ENDPOINTS.getList, { list_ean: ean });
       console.log('[GET_LIST][RAW_RESPONSE]', finishResponse);
       state.currentListEan = ean;
-      state.finishItems = groupItemsByEan(asArrayItems(finishResponse));
+      const rawItems = asArrayItems(finishResponse);
+      const hasOrden = rawItems.some((item) => Number(item.orden) > 0);
+      state.finishItems = hasOrden ? rawItems : groupItemsByEan(rawItems);
+      if (hasOrden) {
+        state.finishItems.sort((a, b) => Number(a.orden) - Number(b.orden));
+      }
       openPartialFromFinishItems();
       return;
     }
@@ -650,6 +658,7 @@ formListScan.addEventListener('submit', async (event) => {
 formOperatorScan.addEventListener('submit', async (event) => {
   event.preventDefault();
   const ean = inputOperatorEan.value.trim();
+  lockScan();
 
   if (!ean) return;
 
@@ -718,6 +727,7 @@ inputPendingEan.addEventListener('input', () => {
 });
 
 window.addEventListener('keydown', (event) => {
+  if (scanLocked) return;
   if (!screens.operator.classList.contains('hidden')) {
     if (/^[a-zA-Z0-9]$/.test(event.key)) {
       event.preventDefault();

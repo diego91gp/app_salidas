@@ -445,6 +445,7 @@ inventoryListEl.addEventListener('click', async (event) => {
 formCountEan.addEventListener('submit', async (event) => {
   event.preventDefault();
   const ean = scanInput.value.trim();
+  lockScan();
   if (!ean) {
     showToast('ESCANEE UN EAN');
     return;
@@ -470,6 +471,7 @@ if (formInventoryOperatorScan) {
   formInventoryOperatorScan.addEventListener('submit', async (event) => {
     event.preventDefault();
     const ean = String(inputInventoryOperatorEan.value || '').trim();
+    lockScan();
     if (!ean) return;
 
     try {
@@ -501,6 +503,7 @@ if (formInventoryOperatorScan) {
 if (formVarDetail) {
   formVarDetail.addEventListener('submit', async (event) => {
     event.preventDefault();
+    lockScan();
     setVarFormError('');
 
     const payload = {
@@ -579,6 +582,7 @@ if (keypadVar) {
 }
 
 window.addEventListener('keydown', (event) => {
+  if (scanLocked) return;
   const onOperator = !screens.operator.classList.contains('hidden');
   const onCount = !screens.count.classList.contains('hidden');
   const onVarDetail = !screens.varDetail.classList.contains('hidden');

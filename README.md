@@ -39,7 +39,7 @@ apps_tablet/
 │   ├── menu/                       # Main menu (CSS + JS)
 │   └── picking-map/                # Picking map module (CSS + JS)
 ├── index.html                      # Main menu
-├── almacen.html                    # Warehouse management module
+├── warehouse-mgmt.html                    # Warehouse management module
 ├── clock-in.html                   # Clock-in module
 ├── drawer-inventory.html           # Drawer inventory module
 ├── export-lists.html               # Picking list export module
@@ -84,7 +84,7 @@ window.ENV_CONFIG = {
 ### `index.html` — Main Menu
 Entry point. Links to all modules.
 
-### `almacen.html` — Warehouse Management
+### `warehouse-mgmt.html` — Warehouse Management
 Full inventory counting flow for warehouse pallets and boxes. Backend project: `SRK_ALMACENAJE` at `/alm_stock/`.
 
 **Screen flow:**
@@ -116,7 +116,7 @@ Full inventory counting flow for warehouse pallets and boxes. Backend project: `
 | `com_par_id` | selected PO ID (optional) |
 | `fecha_llegada_aprox` | date string `YYYY-MM-DD` — from PO ETA or manual calendar (optional) |
 
-**Files:** `almacen.html`, `pages/almacen/almacen.js`, `pages/almacen/almacen.css`
+**Files:** `warehouse-mgmt.html`, `pages/almacen/almacen.js`, `pages/almacen/almacen.css`
 
 ### `export-lists.html` — Export Picking Lists
 - Scan operator EAN → validate via `GET /api/API_GET_OPE`
@@ -206,7 +206,7 @@ apps_tablet/
 │   ├── menu/                       # Menú principal (CSS + JS)
 │   └── picking-map/                # Módulo mapa picking (CSS + JS)
 ├── index.html                      # Menú principal
-├── almacen.html                    # Módulo de gestión de almacén
+├── warehouse-mgmt.html                    # Módulo de gestión de almacén
 ├── clock-in.html                   # Módulo de fichaje
 ├── drawer-inventory.html           # Módulo de inventario de gavetas
 ├── export-lists.html               # Módulo de sacar listados de picking
@@ -251,7 +251,7 @@ window.ENV_CONFIG = {
 ### `index.html` — Menú principal
 Punto de entrada. Acceso a todos los módulos.
 
-### `almacen.html` — Gestión de almacén
+### `warehouse-mgmt.html` — Gestión de almacén
 Flujo completo de recuento de inventario por palés y cajas. Proyecto backend: `SRK_ALMACENAJE` en `/alm_stock/`.
 
 **Flujo de pantallas:**
@@ -283,7 +283,7 @@ Flujo completo de recuento de inventario por palés y cajas. Proyecto backend: `
 | `com_par_id` | ID del pedido de compra seleccionado (opcional) |
 | `fecha_llegada_aprox` | fecha en formato `YYYY-MM-DD` — del ETA de la PO o calendario manual (opcional) |
 
-**Archivos:** `almacen.html`, `pages/almacen/almacen.js`, `pages/almacen/almacen.css`
+**Archivos:** `warehouse-mgmt.html`, `pages/almacen/almacen.js`, `pages/almacen/almacen.css`
 
 ### `export-lists.html` — Sacar listados de picking
 - Escanear EAN operario → validar con `GET /api/API_GET_OPE`

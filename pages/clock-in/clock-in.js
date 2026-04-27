@@ -223,6 +223,7 @@ function showActionScreen(startAtIso) {
 formOperatorScan.addEventListener('submit', async (event) => {
   event.preventDefault();
   const ean = String(inputOperatorEan.value || '').trim();
+  lockScan();
   if (!ean) return;
 
   try {
@@ -314,6 +315,7 @@ btnConfirmNo.addEventListener('click', () => {
 });
 
 window.addEventListener('keydown', (event) => {
+  if (scanLocked) return;
   const onOperator = !screens.operator.classList.contains('hidden');
   if (!onOperator) return;
   if (event.ctrlKey || event.metaKey) return;
